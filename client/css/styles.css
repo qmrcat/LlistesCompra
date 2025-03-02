@@ -1,0 +1,132 @@
+/* Estilos personalizados para CompraJunts */
+
+/* Animación de loader */
+.loader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+  }
+  
+  .loader {
+    border: 4px solid rgba(33, 150, 243, 0.3);
+    border-radius: 50%;
+    border-top: 4px solid #2196F3;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Tarjetas de lista */
+  .list-card {
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .list-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  /* Animación para items completados */
+  .item-completed {
+    transition: all 0.3s ease;
+  }
+  
+  .item-completed .item-name {
+    text-decoration: line-through;
+    color: #9e9e9e;
+  }
+  
+  /* Animación para notificaciones */
+  .notification-enter {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  
+  .notification-exit {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  
+  /* Animación de aparición de elementos */
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  /* Estilo para los ítems de la lista */
+  .item-container {
+    transition: background-color 0.2s ease;
+  }
+  
+  .item-container:hover {
+    background-color: #f0f7ff;
+  }
+  
+  /* Estilo para los modales */
+  .modal-content {
+    animation: modalIn 0.3s ease-out;
+  }
+  
+  @keyframes modalIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Estilo para botones de cantidad */
+  .quantity-btn {
+    transition: all 0.2s ease;
+  }
+  
+  .quantity-btn:hover {
+    background-color: #e3f2fd;
+  }
+  
+  .quantity-btn:active {
+    transform: scale(0.95);
+  }
+  
+  /* Estilos para los tooltips */
+  .tooltip {
+    position: relative;
+  }
+  
+  .tooltip .tooltip-text {
+    visibility: hidden;
+    width: 120px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  
+  .tooltip:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+  }
