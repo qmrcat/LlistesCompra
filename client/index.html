@@ -96,19 +96,28 @@
       <div class="bg-card p-4 rounded shadow mb-4">
         <form id="new-item-form" class="flex flex-col md:flex-row gap-2">
           <input 
-            type="text" 
-            id="new-item-name" 
-            class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
-            placeholder="Nom de l'ítem"
-            required
+          type="text" 
+          id="new-item-name"
+          class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+          placeholder="Nom de l'ítem"
+          required
           >
-          <input 
-            type="number" 
-            id="new-item-quantity" 
-            class="w-20 px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
-            value="1" 
-            min="1"
-          >
+          <div class="flex flex-row gap-2">
+            <input 
+              type="number" 
+              id="new-item-quantity" 
+              class="w-24 px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+              value="1" 
+              min="1"
+            >
+            <input 
+              type="text" 
+              id="new-item-typesUnits" 
+              class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+              placeholder="Tipus d'unitat"
+              required
+            >
+          </div>
           <button 
             type="submit" 
             class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition"
@@ -117,7 +126,7 @@
           </button>
         </form>
       </div>
-      
+            
       <!-- Lista de ítems -->
       <div id="items-container" class="space-y-3">
         <!-- Los ítems se cargarán mediante JavaScript -->

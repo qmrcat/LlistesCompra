@@ -22,6 +22,8 @@ export class ItemManager {
       
       // Guardar ítems y renderizar
       this.items = response.list.items || [];
+      console.log("🚀 ~ ItemManager ~ loadItems ~ this.items :", this.items )
+      
       this.viewController.renderItems(this.items);
       
       return this.items;
@@ -33,12 +35,13 @@ export class ItemManager {
   }
   
   // Añadir un nuevo ítem
-  async addItem(listId, { name, quantity = 1, notes = '' }) {
+  async addItem(listId, { name, quantity = 1, notes = '', typesUnits = 'unitat' }) {
     try {
       const response = await makeApiRequest(`/api/items/list/${listId}`, 'POST', {
         name,
         quantity,
-        notes
+        notes,
+        typesUnits
       });
       
       // Añadir ítem al array local
@@ -46,7 +49,7 @@ export class ItemManager {
       this.items.push(newItem);
       
       // Actualizar vista
-      this.viewController.addItemToView(newItem);
+      //this.viewController.addItemToView(newItem);
       
       return newItem;
     } catch (error) {
@@ -164,5 +167,26 @@ export class ItemManager {
   isCurrentUserCreator(item) {
     const currentUser = getLoggedUser();
     return currentUser && item.addedBy && item.addedBy.id === currentUser.id;
+  }
+
+  // Comprobar si el usuario actual es el creador del ítem
+  isCurrentUserCreator(item) {
+    const currentUser = getLoggedUser();
+    return currentUser && item.addedBy && item.addedBy.id === currentUser.id;
+  }
+  
+  // Comprobar si el usuario puede editar el ítem (es propietario de la lista o creador del ítem)
+  canUserEditItem(item) {
+    const currentUser = getLoggedUser();
+    if (!currentUser || !item) return false;
+    
+    // Verificar si es el creador del ítem
+    const isCreator = this.isCurrentUserCreator(item);
+    
+    // Verificar si es propietario de la lista
+    const list = window.listManager?.getListById(this.listId);
+    const isOwner = list && list.userRole === 'owner';
+    
+    return isCreator || isOwner;
   }
 }

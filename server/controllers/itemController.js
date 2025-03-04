@@ -6,9 +6,9 @@ const { Op } = require('sequelize');
 const addItem = async (req, res) => {
   try {
     const { listId } = req.params;
-    const { name, quantity = 1, notes = '' } = req.body;
+    const { name, quantity = 1, notes = '', typesUnits = 'unitat' } = req.body;
     const userId = req.user.id;
-
+   
     // Verificar si el usuario tiene acceso a la lista
     const userList = await ListUser.findOne({
       where: { 
@@ -49,7 +49,8 @@ const addItem = async (req, res) => {
       notes,
       addedBy: userId,
       listId: parseInt(listId),
-      completed: false
+      completed: false,
+      typesUnits,
     });
 
     // Actualizar referencia del último ítem en la lista
@@ -77,14 +78,9 @@ const addItem = async (req, res) => {
         alias: user.alias
       },
       createdAt: newItem.createdAt,
-      updatedAt: newItem.updatedAt
+      updatedAt: newItem.updatedAt,
+      typesUnits: newItem.typesUnits
     };
-
-    // // Notificar a todos los usuarios de la lista vía WebSocket
-    // emitToList(listId, 'item:added', {
-    //   listId: parseInt(listId),
-    //   item: itemResponse
-    // });
 
     // Notificar a todos los usuarios de la lista vía WebSocket
     const websocketService = require('../services/websocketService');
@@ -108,7 +104,7 @@ const addItem = async (req, res) => {
 const updateItem = async (req, res) => {
   try {
     const { itemId } = req.params;
-    const { name, quantity, completed, notes } = req.body;
+    const { name, quantity, completed, notes, typesUnits } = req.body;
     const userId = req.user.id;
 
     // Encontrar el ítem
@@ -138,6 +134,17 @@ const updateItem = async (req, res) => {
       });
     }
 
+    // Verificar que el usuario sea el propietario de la lista o quien agregó el ítem
+    const isOwner = userList.role === 'owner';
+    const isCreator = item.addedBy === userId;
+
+    if (!isOwner && !isCreator) {
+      return res.status(403).json({
+        success: false,
+        message: 'Solo el propietario de la lista o quien creó el ítem puede modificarlo'
+      });
+    }
+
     // Validar datos
     if (name !== undefined && (name === null || name.trim() === '')) {
       return res.status(400).json({
@@ -159,6 +166,7 @@ const updateItem = async (req, res) => {
     if (quantity !== undefined) updatedFields.quantity = quantity;
     if (completed !== undefined) updatedFields.completed = completed;
     if (notes !== undefined) updatedFields.notes = notes;
+    if (typesUnits !== undefined) updatedFields.typesUnits = typesUnits;
 
     await item.update(updatedFields);
 
@@ -179,14 +187,9 @@ const updateItem = async (req, res) => {
         alias: creator.alias
       },
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt
+      updatedAt: item.updatedAt,
+      typesUnits: item.typesUnits
     };
-
-    // // Notificar a todos los usuarios de la lista vía WebSocket
-    // emitToList(item.listId, 'item:updated', {
-    //   listId: item.listId,
-    //   item: itemResponse
-    // });
 
     // Notificar a todos los usuarios de la lista vía WebSocket
     const websocketService = require('../services/websocketService');
@@ -231,24 +234,34 @@ const deleteItem = async (req, res) => {
         }
       }
     });
+    
+
+    if (!userList) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permiso para eliminar ítems de esta lista'
+      });
+    }
+    
+    // Verificar que el usuario sea el propietario de la lista o quien agregó el ítem
+    const isOwner = userList.role === 'owner';
+    const isCreator = item.addedBy === userId;
+
+    if (!isOwner && !isCreator) {
+      return res.status(403).json({
+        success: false,
+        message: 'Solo el propietario de la lista o quien creó el ítem puede eliminarlo'
+      });
+    }
 
 
     // Guardar el listId antes de eliminar el ítem
     const listId = item.listId;
     const itemIdList = item.id;
 
-    // if (!userList) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'No tienes permiso para eliminar ítems de esta lista'
-    //   });
-    // }
     // Notificar a todos los usuarios de la lista vía WebSocket
     const websocketService = require('../services/websocketService');
     websocketService.notifyItemDeleted(listId, itemId);
-    // websocketService.notifyItemDeleted(listId, itemId);
-
-
 
     // Eliminar el ítem
     await item.destroy();

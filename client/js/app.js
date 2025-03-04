@@ -26,6 +26,7 @@ export let listManager = null;
 export let listViewController = null;
 export let itemManager = null;
 export let currentListId = null;
+export let aliasUsuari = null;
 
 
 // Inicialización de la aplicación
@@ -46,6 +47,8 @@ async function checkAuth() {
       const user = getLoggedUser();
       // Actualizar UI para usuario autenticado
       userAlias.textContent = user.alias;
+      aliasUsuari = user.alias;
+      console.log("🚀 ~ checkAuth ~ aliasUsuari:", aliasUsuari)
       userMenu.classList.remove('hidden');
       
       // Inicializar gestores
@@ -102,14 +105,17 @@ function setupEventListeners() {
     if (currentListId && itemManager) {
       const nameInput = document.getElementById('new-item-name');
       const quantityInput = document.getElementById('new-item-quantity');
+      const typesUnits = document.getElementById('new-item-typesUnits');
       
       await itemManager.addItem(currentListId, {
         name: nameInput.value,
-        quantity: quantityInput.value
+        quantity: quantityInput.value,
+        typesUnits: typesUnits.value
       });
       
       nameInput.value = '';
       quantityInput.value = '1';
+      typesUnits.value = 'unitat';
     }
   });
 }

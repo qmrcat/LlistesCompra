@@ -31,15 +31,6 @@ const initializeWebSocket = (server) => {
   io.on('connection', (socket) => {
     console.log(`Usuario conectado: ${socket.user.id}`);
 
-    // // Unirse a salas para cada lista del usuario
-    // socket.on('joinLists', (lists) => {
-    //   if (Array.isArray(lists)) {
-    //     lists.forEach(listId => {
-    //       socket.join(`list:${listId}`);
-    //     });
-    //   }
-    // });
-
     // Unirse a salas para cada lista del usuario
     socket.on('joinLists', (lists) => {
       if (Array.isArray(lists)) {
@@ -49,13 +40,6 @@ const initializeWebSocket = (server) => {
         });
       }
     });
-
-
-    // // Escuchar cuando un usuario se une a una lista
-    // socket.on('joinList', (listId) => {
-    //   socket.join(`list:${listId}`);
-    //   console.log(`Usuario ${socket.user.id} unido a la lista ${listId}`);
-    // });
     
     // Escuchar cuando un usuario se une a una lista
     socket.on('joinList', (listId) => {
@@ -83,13 +67,6 @@ const initializeWebSocket = (server) => {
 
   return io;
 };
-
-// // Función para emitir actualizaciones a una sala específica
-// const emitToList = (listId, event, data) => {
-//   if (io) {
-//     io.to(`list:${listId}`).emit(event, data);
-//   }
-// };
 
 // Función para emitir actualizaciones a una sala específica
 const emitToList = (listId, event, data) => {

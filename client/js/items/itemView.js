@@ -1,5 +1,5 @@
 // Controlador de vista para los ítems
-import { showModal, closeModal } from '../app.js';
+import { showModal, closeModal, aliasUsuari } from '../app.js';
 import { showNotification } from '../ui/notification.js';
 
 export class ItemViewController {
@@ -64,14 +64,26 @@ export class ItemViewController {
   
   // Añadir un ítem a la vista
   addItemToView(item, prepend = true) {
+
     // Eliminar mensaje de "no hay ítems" si existe
     if (this.itemsContainer.querySelector('.text-center')) {
       this.itemsContainer.innerHTML = '';
     }
-    
+    let marginIntemAlias = ''
+    if(aliasUsuari === item.addedBy.alias){
+      marginIntemAlias = 'bg-green-200 ms-14'
+    } else {
+      marginIntemAlias = 'bg-blue-200 me-14'
+    }
+
+
+
     const itemElement = document.createElement('div');
-    itemElement.className = `item-container bg-card rounded-lg shadow p-4 ${item.completed ? 'item-completed' : ''} fade-in`;
+    itemElement.className = `item-container bg-card rounded-lg shadow p-4 ${item.completed ? 'item-completed' : ''} fade-in ${marginIntemAlias}`;
     itemElement.dataset.itemId = item.id;
+
+    // Determinar si el usuario puede editar este ítem
+    const canEdit = this.itemManager.canUserEditItem(item);
     
     // Preparar notas (si existen)
     const notesHtml = item.notes ? `
@@ -87,6 +99,24 @@ export class ItemViewController {
         ${item.addedBy ? item.addedBy.alias : 'Usuari'}
       </span>
     `;
+
+    // Preparar menú de opciones (solo visible si puede editar)
+    const menuHtml = canEdit ? `
+      <div class="dropdown relative">
+        <button class="item-menu w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+        <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+          <button class="edit-notes block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+            <i class="fas fa-edit mr-2"></i>Editar notes
+          </button>
+          <button class="delete-item block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+            <i class="fas fa-trash-alt mr-2"></i>Eliminar ítem
+          </button>
+        </div>
+      </div>
+    ` : '';
+
     
     itemElement.innerHTML = `
       <div class="flex items-start">
@@ -100,29 +130,38 @@ export class ItemViewController {
           <div class="flex items-start justify-between">
             <h3 class="font-medium item-name">${item.name}</h3>
             <div class="flex items-center space-x-2">
-              <div class="quantity-control flex items-center">
-                <button class="decrease-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center ${item.quantity <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}">
-                  <i class="fas fa-minus"></i>
-                </button>
-                <span class="quantity mx-2 font-medium">${item.quantity}</span>
-                <button class="increase-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
-                  <i class="fas fa-plus"></i>
-                </button>
-              </div>
-              <div class="dropdown relative">
-                <button class="item-menu w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
-                  <i class="fas fa-ellipsis-v"></i>
-                </button>
-                <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                  <button class="edit-notes block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                    <i class="fas fa-edit mr-2"></i>Editar notes
+              <div class="flex flex-col items-center space-x-1">
+                <div class="quantity-control flex items-center">
+                  <button class="decrease-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center ${item.quantity <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}">
+                    <i class="fas fa-minus"></i>
                   </button>
-                  <button class="delete-item block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                    <i class="fas fa-trash-alt mr-2"></i>Eliminar ítem
+                  <span class="quantity mx-2 font-medium">${item.quantity}</span>
+                  <button class="increase-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                    <i class="fas fa-plus"></i>
                   </button>
                 </div>
+                <div class="flex items-center space-x-2">
+                  <h5 class="text-sm">${item.typesUnits}</h5>
+                </div>
               </div>
+              <!--
+                  <div class="dropdown relative">
+                    <button class="item-menu w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                      <button class="edit-notes block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        <i class="fas fa-edit mr-2"></i>Editar notes
+                      </button>
+                      <button class="delete-item block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                        <i class="fas fa-trash-alt mr-2"></i>Eliminar ítem
+                      </button>
+                    </div>
+                  </div>
+              -->
+              ${menuHtml}
             </div>
+
           </div>
           
           ${notesHtml}
@@ -132,7 +171,7 @@ export class ItemViewController {
     `;
     
     // Añadir eventos para cada elemento
-    this.addItemEvents(itemElement, item);
+    this.addItemEvents(itemElement, item, canEdit);
     
     // Añadir al contenedor (al principio o al final)
     if (prepend && this.itemsContainer.children.length > 0) {
@@ -142,10 +181,75 @@ export class ItemViewController {
     }
   }
   
+  // // Actualizar un ítem en la vista
+  // updateItemInView(itemId, item) {
+  //   const itemElement = this.itemsContainer.querySelector(`[data-item-id="${itemId}"]`);
+  //   if (itemElement) {
+  //     // Actualizar estado completado
+  //     if (item.completed) {
+  //       itemElement.classList.add('item-completed');
+  //       itemElement.querySelector('.toggle-completed').classList.add('bg-primary', 'text-white');
+  //       itemElement.querySelector('.toggle-completed').innerHTML = '<i class="fas fa-check"></i>';
+  //     } else {
+  //       itemElement.classList.remove('item-completed');
+  //       itemElement.querySelector('.toggle-completed').classList.remove('bg-primary', 'text-white');
+  //       itemElement.querySelector('.toggle-completed').innerHTML = '';
+  //     }
+      
+  //     // Actualizar nombre
+  //     itemElement.querySelector('.item-name').textContent = item.name;
+      
+  //     // Actualizar cantidad
+  //     itemElement.querySelector('.quantity').textContent = item.quantity;
+      
+  //     // Activar/desactivar botón de disminuir
+  //     const decreaseBtn = itemElement.querySelector('.decrease-quantity');
+  //     if (item.quantity <= 1) {
+  //       decreaseBtn.classList.add('text-gray-300', 'cursor-not-allowed');
+  //       decreaseBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+  //     } else {
+  //       decreaseBtn.classList.remove('text-gray-300', 'cursor-not-allowed');
+  //       decreaseBtn.classList.add('text-gray-600', 'hover:bg-gray-100');
+  //     }
+      
+  //     // Actualizar notas
+  //     const existingNotes = itemElement.querySelector('.text-sm.text-gray-600.bg-gray-50');
+  //     if (item.notes) {
+  //       if (existingNotes) {
+  //         existingNotes.textContent = item.notes;
+  //       } else {
+  //         // Crear el elemento de notas si no existe
+  //         const creatorBadge = itemElement.querySelector('.flex.items-center.text-xs.text-gray-500');
+  //         const notesElement = document.createElement('div');
+  //         notesElement.className = 'mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded';
+  //         notesElement.textContent = item.notes;
+          
+  //         // Insertar antes del badge de creador
+  //         if (creatorBadge) {
+  //           creatorBadge.parentNode.insertBefore(notesElement, creatorBadge);
+  //         } else {
+  //           itemElement.querySelector('.flex-grow').appendChild(notesElement);
+  //         }
+  //       }
+  //     } else {
+  //       // Eliminar notas si existen
+  //       if (existingNotes) {
+  //         existingNotes.remove();
+  //       }
+  //     }
+      
+  //     // Reordenar si es necesario (completado/no completado)
+  //     this.reorderItems();
+  //   }
+  // }
+
   // Actualizar un ítem en la vista
   updateItemInView(itemId, item) {
     const itemElement = this.itemsContainer.querySelector(`[data-item-id="${itemId}"]`);
     if (itemElement) {
+      // Determinar si el usuario puede editar este ítem
+      const canEdit = this.itemManager.canUserEditItem(item);
+      
       // Actualizar estado completado
       if (item.completed) {
         itemElement.classList.add('item-completed');
@@ -171,6 +275,41 @@ export class ItemViewController {
       } else {
         decreaseBtn.classList.remove('text-gray-300', 'cursor-not-allowed');
         decreaseBtn.classList.add('text-gray-600', 'hover:bg-gray-100');
+      }
+      
+      // Actualizar menú desplegable según permisos
+      const dropdownContainer = itemElement.querySelector('.dropdown');
+      if (dropdownContainer) {
+        if (!canEdit) {
+          // Si no puede editar, eliminar el menú
+          dropdownContainer.remove();
+        }
+      } else if (canEdit) {
+        // Si puede editar y no existe el menú, añadirlo
+        const quantityControl = itemElement.querySelector('.quantity-control');
+        if (quantityControl) {
+          const menuHtml = `
+            <div class="dropdown relative">
+              <button class="item-menu w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                <i class="fas fa-ellipsis-v"></i>
+              </button>
+              <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
+                <button class="edit-notes block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                  <i class="fas fa-edit mr-2"></i>Editar notes
+                </button>
+                <button class="delete-item block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                  <i class="fas fa-trash-alt mr-2"></i>Eliminar ítem
+                </button>
+              </div>
+            </div>
+          `;
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = menuHtml;
+          const menuElement = tempDiv.firstChild;
+          
+          quantityControl.parentNode.appendChild(menuElement);
+          this.addItemEvents(itemElement, item, canEdit);
+        }
       }
       
       // Actualizar notas
@@ -204,6 +343,7 @@ export class ItemViewController {
     }
   }
   
+  
   // Eliminar un ítem de la vista
   removeItemFromView(itemId) {
     const itemElement = this.itemsContainer.querySelector(`[data-item-id="${itemId}"]`);
@@ -230,60 +370,127 @@ export class ItemViewController {
     }
   }
   
-  // Añadir eventos a un elemento de ítem
-  addItemEvents(itemElement, item) {
-    // Botón para alternar completado
-    const toggleCompletedBtn = itemElement.querySelector('.toggle-completed');
-    toggleCompletedBtn.addEventListener('click', () => {
-      this.itemManager.toggleItemCompleted(item.id);
-    });
+  // // Añadir eventos a un elemento de ítem
+  // addItemEvents(itemElement, item, canEdit) {
+  //   // Botón para alternar completado
+  //   const toggleCompletedBtn = itemElement.querySelector('.toggle-completed');
+  //   toggleCompletedBtn.addEventListener('click', () => {
+  //     this.itemManager.toggleItemCompleted(item.id);
+  //   });
     
-    // Botones de cantidad
-    const increaseBtn = itemElement.querySelector('.increase-quantity');
-    const decreaseBtn = itemElement.querySelector('.decrease-quantity');
+  //   // Botones de cantidad
+  //   const increaseBtn = itemElement.querySelector('.increase-quantity');
+  //   const decreaseBtn = itemElement.querySelector('.decrease-quantity');
     
-    increaseBtn.addEventListener('click', () => {
-      this.itemManager.increaseItemQuantity(item.id);
-    });
+  //   increaseBtn.addEventListener('click', () => {
+  //     this.itemManager.increaseItemQuantity(item.id);
+  //   });
     
-    decreaseBtn.addEventListener('click', () => {
-      if (item.quantity > 1) {
-        this.itemManager.decreaseItemQuantity(item.id);
-      }
-    });
+  //   decreaseBtn.addEventListener('click', () => {
+  //     if (item.quantity > 1) {
+  //       this.itemManager.decreaseItemQuantity(item.id);
+  //     }
+  //   });
     
+  //   // Menú desplegable
+  //   const menuBtn = itemElement.querySelector('.item-menu');
+  //   const dropdownMenu = itemElement.querySelector('.dropdown-menu');
+    
+  //   menuBtn.addEventListener('click', (e) => {
+  //     e.stopPropagation();
+  //     dropdownMenu.classList.toggle('hidden');
+      
+  //     // Cerrar al hacer clic fuera
+  //     const closeDropdown = () => {
+  //       dropdownMenu.classList.add('hidden');
+  //       document.removeEventListener('click', closeDropdown);
+  //     };
+      
+  //     // Añadir listener con pequeño delay para evitar que se cierre inmediatamente
+  //     setTimeout(() => {
+  //       document.addEventListener('click', closeDropdown);
+  //     }, 0);
+  //   });
+    
+  //   // Botón de editar notas
+  //   const editNotesBtn = itemElement.querySelector('.edit-notes');
+  //   editNotesBtn.addEventListener('click', () => {
+  //     this.showEditNotesModal(item);
+  //   });
+    
+  //   // Botón de eliminar ítem
+  //   const deleteItemBtn = itemElement.querySelector('.delete-item');
+  //   deleteItemBtn.addEventListener('click', () => {
+  //     this.showDeleteConfirmationModal(item);
+  //   });
+  // }
+
+
+// Añadir eventos a un elemento de ítem
+addItemEvents(itemElement, item, canEdit) {
+  // Botón para alternar completado
+  const toggleCompletedBtn = itemElement.querySelector('.toggle-completed');
+  toggleCompletedBtn.addEventListener('click', () => {
+    this.itemManager.toggleItemCompleted(item.id);
+  });
+  
+  // Botones de cantidad
+  const increaseBtn = itemElement.querySelector('.increase-quantity');
+  const decreaseBtn = itemElement.querySelector('.decrease-quantity');
+  
+  increaseBtn.addEventListener('click', () => {
+    this.itemManager.increaseItemQuantity(item.id);
+  });
+  
+  decreaseBtn.addEventListener('click', () => {
+    if (item.quantity > 1) {
+      this.itemManager.decreaseItemQuantity(item.id);
+    }
+  });
+  
+  // Solo añadir eventos de edición si el usuario tiene permisos
+  if (canEdit) {
     // Menú desplegable
     const menuBtn = itemElement.querySelector('.item-menu');
     const dropdownMenu = itemElement.querySelector('.dropdown-menu');
     
-    menuBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      dropdownMenu.classList.toggle('hidden');
+    if (menuBtn && dropdownMenu) {
+      menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('hidden');
+        
+        // Cerrar al hacer clic fuera
+        const closeDropdown = () => {
+          dropdownMenu.classList.add('hidden');
+          document.removeEventListener('click', closeDropdown);
+        };
+        
+        // Añadir listener con pequeño delay para evitar que se cierre inmediatamente
+        setTimeout(() => {
+          document.addEventListener('click', closeDropdown);
+        }, 0);
+      });
       
-      // Cerrar al hacer clic fuera
-      const closeDropdown = () => {
-        dropdownMenu.classList.add('hidden');
-        document.removeEventListener('click', closeDropdown);
-      };
+      // Botón de editar notas
+      const editNotesBtn = itemElement.querySelector('.edit-notes');
+      if (editNotesBtn) {
+        editNotesBtn.addEventListener('click', () => {
+          this.showEditNotesModal(item);
+        });
+      }
       
-      // Añadir listener con pequeño delay para evitar que se cierre inmediatamente
-      setTimeout(() => {
-        document.addEventListener('click', closeDropdown);
-      }, 0);
-    });
-    
-    // Botón de editar notas
-    const editNotesBtn = itemElement.querySelector('.edit-notes');
-    editNotesBtn.addEventListener('click', () => {
-      this.showEditNotesModal(item);
-    });
-    
-    // Botón de eliminar ítem
-    const deleteItemBtn = itemElement.querySelector('.delete-item');
-    deleteItemBtn.addEventListener('click', () => {
-      this.showDeleteConfirmationModal(item);
-    });
+      // Botón de eliminar ítem
+      const deleteItemBtn = itemElement.querySelector('.delete-item');
+      if (deleteItemBtn) {
+        deleteItemBtn.addEventListener('click', () => {
+          this.showDeleteConfirmationModal(item);
+        });
+      }
+    }
   }
+}
+
+
   
   // Mostrar modal para editar notas
   showEditNotesModal(item) {

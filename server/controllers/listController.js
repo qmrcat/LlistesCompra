@@ -159,25 +159,6 @@ const getListDetail = async (req, res) => {
       ]
     });
 
-    // // Obtener detalles de la lista
-    // const list = await List.findByPk(listId, {
-    //   include: [
-    //     {
-    //       model: User,
-    //       attributes: ['id', 'alias'],
-    //       through: { attributes: ['role'] }
-    //     },
-    //     {
-    //       model: Item,
-    //       include: [{
-    //         model: User,
-    //         as: 'creator',
-    //         attributes: ['id', 'alias']
-    //       }]
-    //     }
-    //   ]
-    // });
-
     if (!list) {
       return res.status(404).json({
         success: false,
@@ -207,7 +188,8 @@ const getListDetail = async (req, res) => {
           alias: item.creator.alias
         },
         createdAt: item.createdAt,
-        updatedAt: item.updatedAt
+        updatedAt: item.updatedAt,
+        typesUnits: item.typesUnits
       })),
       pendingInvitations: list.Invitations ? list.Invitations.map(invitation => ({
         id: invitation.id,
@@ -223,60 +205,6 @@ const getListDetail = async (req, res) => {
       participantCount: list.Users.length,
       userRole: userList.role
     };
-
-    // // Formatear respuesta
-    // const formattedList = {
-    //   id: list.id,
-    //   name: list.name,
-    //   createdBy: list.createdBy,
-    //   createdAt: list.createdAt,
-    //   participants: list.Users.map(user => ({
-    //     id: user.id,
-    //     alias: user.alias,
-    //     role: user.ListUser.role
-    //   })),
-    //   items: list.Items.map(item => ({
-    //     id: item.id,
-    //     name: item.name,
-    //     quantity: item.quantity,
-    //     completed: item.completed,
-    //     notes: item.notes,
-    //     addedBy: {
-    //       id: item.creator.id,
-    //       alias: item.creator.alias
-    //     },
-    //     createdAt: item.createdAt,
-    //     updatedAt: item.updatedAt
-    //   })),
-    //   participantCount: list.Users.length,
-    //   userRole: userList.role
-    // };
-
-    // const formattedList = {
-    //   id: list.id,
-    //   name: list.name,
-    //   createdBy: list.createdBy,
-    //   createdAt: list.createdAt,
-    //   participants: list.Users.map(user => ({
-    //     id: user.id,
-    //     alias: user.alias,
-    //     role: user.ListUser.role
-    //   })),
-    //   items: list.Items.map(item => ({
-    //     id: item.id,
-    //     name: item.name,
-    //     quantity: item.quantity,
-    //     completed: item.completed,
-    //     notes: item.notes,
-    //     addedBy: {
-    //       id: item.creator.id,
-    //       alias: item.creator.alias
-    //     },
-    //     createdAt: item.createdAt,
-    //     updatedAt: item.updatedAt
-    //   })),
-    //   userRole: userList.role
-    // };
 
     res.json({
       success: true,
@@ -730,14 +658,6 @@ const rejectInvitation = async (req, res) => {
     const userId = req.user.id;
     const userEmail = req.user.email;
 
-    // // Buscar la invitación
-    // const invitation = await Invitation.findByPk(invitationId, {
-    //   include: [
-    //     { model: List },
-    //     { model: User, as: 'inviter', attributes: ['id', 'alias'] }
-    //   ]
-    // });
-
     // Buscar invitación válida
     const invitation = await Invitation.findOne({
       where: {
@@ -815,15 +735,3 @@ module.exports = {
   leaveList,
   rejectInvitation
 };
-
-// module.exports = {
-//   createList,
-//   getUserLists,
-//   getListDetail,
-//   inviteUserToList,
-//   acceptInvitation,
-//   getPendingInvitations,
-//   cancelInvitation,
-//   resendInvitation,
-//   leaveList,
-// }; 

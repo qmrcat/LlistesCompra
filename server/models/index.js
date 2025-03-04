@@ -20,8 +20,6 @@ Invitation.belongsTo(User, { foreignKey: 'invitedBy', as: 'inviter' });
 List.hasMany(Invitation, { foreignKey: 'listId' });
 Invitation.belongsTo(List, { foreignKey: 'listId' });
 
-
-
 module.exports = {
   User,
   List,

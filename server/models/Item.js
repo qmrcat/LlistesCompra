@@ -32,7 +32,11 @@ const Item = sequelize.define('Item', {
   listId: {
     type: DataTypes.INTEGER,
     allowNull: false
-  }
+  },
+  typesUnits: {
+    type: DataTypes.STRING(16),
+    allowNull: false
+  },
 });
 
 module.exports = Item;
