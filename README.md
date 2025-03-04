@@ -236,7 +236,7 @@ Les contribucions són benvingudes! Si vols contribuir:
 
 ## 📜 Llicència
 
-Aquest projecte està llicenciat sota la llicència MIT - veure l'arxiu [LICENSE](LICENSE) per a més detalls.
+Aquest projecte està llicenciat sota la llicència MIT - veure l'arxiu [LICENSE](LICENSE.md) per a més detalls.
 
 ## 📞 Contacte
 
