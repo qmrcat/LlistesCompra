@@ -87,6 +87,34 @@ export function validateEmail(email) {
     
     return errors;
   }
+
+  /**
+ * Trunca un text a un nombre màxim de caràcters sense partir paraules
+ * 
+ * @param {string} text - El text que volem truncar
+ * @param {number} maxLength - El nombre màxim de caràcters
+ * @returns {string} - El text truncat, amb "..." si s'ha hagut de truncar
+ */
+export function truncateText(text, maxLength) {
+  // Si el text és més curt o igual que la longitud màxima, el retornem sencer
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  // Agafem els primers maxLength caràcters
+  let truncated = text.substring(0, maxLength);
+  
+  // Busquem l'última posició d'un espai en blanc per no tallar paraules
+  const lastSpaceIndex = truncated.lastIndexOf(' ');
+  
+  // Si hi ha un espai, tallem pel darrer espai
+  if (lastSpaceIndex !== -1) {
+    truncated = truncated.substring(0, lastSpaceIndex);
+  }
+  
+  // Afegim els tres punts
+  return truncated + '...';
+}
   
   // Ejemplo de uso:
   /*

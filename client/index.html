@@ -8,8 +8,8 @@
   <!-- Tailwind CSS -->
   <!-- <script src="https://cdn.tailwindcss.com"></script> -->
   <link href="./css/styles.css" rel="stylesheet">
-  <link href="./css/styles-aux.css" rel="stylesheet">
-  <script>
+  <!-- <link href="./css/styles-aux.css" rel="stylesheet"> -->
+  <!-- <script>
     tailwind.config = {
       theme: {
         extend: {
@@ -21,17 +21,15 @@
         }
       }
     }
-  </script>
+  </script> -->
   
   <!-- Iconos de Font Awesome (alternativa a @expo/vector-icons) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   
-  <!-- Estilos personalizados -->
-  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body class="bg-background min-h-screen">
   <!-- Header -->
-  <header class="bg-primary text-white shadow-md">
+  <header class="bg-sky-700 text-white shadow-md">
     <div class="container mx-auto px-4 py-3 flex justify-between items-center">
       <h1 class="text-2xl font-bold">CompraJunts</h1>
       <div id="user-menu" class="hidden">
@@ -61,7 +59,7 @@
     <div id="lists-container" class="hidden">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-bold">Les meves llistes de compra</h2>
-        <button id="btn-new-list" class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition">
+        <button id="btn-new-list" class="bg-blue-400 hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition">
           <i class="fas fa-plus mr-2"></i>Nova llista
         </button>
       </div>
@@ -82,25 +80,25 @@
           <h2 id="list-name" class="text-xl font-bold">Nombre de la lista</h2>
         </div>
         <div class="flex items-center space-x-2">
-          <span id="list-participants" class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+          <span id="list-participants" class="text-sm bg-blue-300 text-blue-800 px-2 py-1 rounded-full">
             <i class="fas fa-users mr-1"></i>0
           </span>
-          <button id="btn-refresh-items" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-2 rounded shadow transition">
+          <button id="btn-refresh-items" class="bg-blue-100 hover:bg-blue-300 text-blue-800 px-3 py-2 rounded shadow transition">
             <i class="fas fa-sync-alt"></i>
           </button>
-          <button id="btn-list-config" class="bg-primary hover:bg-blue-600 text-white px-3 py-2 rounded shadow transition">
+          <button id="btn-list-config" class="bg-blue-400 hover:bg-blue-600 text-white px-3 py-2 rounded shadow transition">
             <i class="fas fa-cog"></i>
           </button>
         </div>
       </div>
       
       <!-- Añadir nuevo ítem -->
-      <div class="bg-card p-4 rounded shadow mb-4">
+      <div class="bg-slate-100 p-4 rounded shadow mb-4">
         <form id="new-item-form" class="flex flex-col md:flex-row gap-2">
           <input 
           type="text" 
           id="new-item-name"
-          class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+          class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
           placeholder="Nom de l'ítem"
           required
           >
@@ -108,21 +106,21 @@
             <input 
               type="number" 
               id="new-item-quantity" 
-              class="w-24 px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               value="1" 
               min="1"
             >
             <input 
               type="text" 
               id="new-item-typesUnits" 
-              class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               placeholder="Tipus d'unitat"
               required
             >
           </div>
           <button 
             type="submit" 
-            class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition"
+            class="bg-blue-400 hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition"
           >
             <i class="fas fa-plus mr-2"></i>Afegir
           </button>
@@ -137,7 +135,9 @@
   </main>
 
   <!-- Modales -->
-  <div id="modal-container" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  
+  <div id="modal-container" class="fixed inset-0 flex items-center justify-center bg-gray-700/50 hidden">
+  <!-- class="hidden fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-50"> -->
     <!-- El contenido de los modales se cargará dinámicamente -->
   </div>
 

@@ -4,7 +4,7 @@
     "description": "Aplicació de llistes de compra col·laboratives",
     "main": "server/index.js",
     "scripts": {
-        "start": "node server/index.js",
+        "start": "node --watch ./server.js",
         "dev": "nodemon server/index.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },

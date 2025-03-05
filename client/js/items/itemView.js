@@ -1,6 +1,7 @@
 // Controlador de vista para los ítems
 import { showModal, closeModal, aliasUsuari } from '../app.js';
 import { showNotification } from '../ui/notification.js';
+import { truncateText } from '../utils/validation.js';
 
 export class ItemViewController {
   constructor(itemManager) {
@@ -78,8 +79,24 @@ export class ItemViewController {
 
 
 
+  /*
+  
+<div class="grid grid-cols-6 grid-rows-5">
+    <div >1</div>
+    <div class="col-span-3">2</div>
+    <div class="col-start-5">4</div>
+    <div class="col-start-6">5</div>
+    <div class="col-span-5 col-start-2 row-start-2">6</div>
+    <div class="col-start-2 row-start-3">7</div>
+    <div class="col-span-3 col-start-3 row-start-3">8</div>
+    <div class="col-start-6 row-start-3">9</div>
+</div>
+      
+  */
+
+
     const itemElement = document.createElement('div');
-    itemElement.className = `item-container bg-card rounded-lg shadow p-4 ${item.completed ? 'item-completed' : ''} fade-in ${marginIntemAlias}`;
+    itemElement.className = `item-container rounded-lg shadow p-4 ${item.completed ? 'item-completed' : ''} fade-in ${marginIntemAlias}`;
     itemElement.dataset.itemId = item.id;
 
     // Determinar si el usuario puede editar este ítem
@@ -87,10 +104,12 @@ export class ItemViewController {
     
     // Preparar notas (si existen)
     const notesHtml = item.notes ? `
-      <div class="mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
-        ${item.notes}
+      <div class="edit-notes-text text-sm text-gray-600 p-2 rounded">
+      ${truncateText(item.notes, 100)}
       </div>
     ` : '';
+
+  
     
     // Preparar badge de usuario creador
     const creatorBadge = `
@@ -117,48 +136,34 @@ export class ItemViewController {
       </div>
     ` : '';
 
-    
+    const itemQuantity = item.quantity.toFixed(3).replace('.', ',')
+
     itemElement.innerHTML = `
       <div class="flex items-start">
         <div class="flex-shrink-0 mr-3">
           <button class="toggle-completed w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center ${item.completed ? 'bg-primary text-white' : 'bg-white'}">
-            ${item.completed ? '<i class="fas fa-check"></i>' : ''}
+            ${item.completed ? '<i class="fas fa-check text-gray-600"></i>' : ''}
           </button>
         </div>
         
         <div class="flex-grow">
           <div class="flex items-start justify-between">
-            <h3 class="font-medium item-name">${item.name}</h3>
+            <h3 class="edit-name-text font-medium item-name">${item.name}</h3>
             <div class="flex items-center space-x-2">
               <div class="flex flex-col items-center space-x-1">
                 <div class="quantity-control flex items-center">
-                  <button class="decrease-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center ${item.quantity <= 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}">
+                  <button class="decrease-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center ${item.quantity <= 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}">
                     <i class="fas fa-minus"></i>
                   </button>
-                  <span class="quantity mx-2 font-medium">${item.quantity}</span>
+                  <span class="quantity quantity-value mx-2 font-medium">${itemQuantity}</span>
                   <button class="increase-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
                     <i class="fas fa-plus"></i>
                   </button>
                 </div>
                 <div class="flex items-center space-x-2">
-                  <h5 class="text-sm">${item.typesUnits}</h5>
+                  <h5 class="types-units text-sm">${item.typesUnits}</h5>
                 </div>
               </div>
-              <!--
-                  <div class="dropdown relative">
-                    <button class="item-menu w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
-                      <i class="fas fa-ellipsis-v"></i>
-                    </button>
-                    <div class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                      <button class="edit-notes block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                        <i class="fas fa-edit mr-2"></i>Editar notes
-                      </button>
-                      <button class="delete-item block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                        <i class="fas fa-trash-alt mr-2"></i>Eliminar ítem
-                      </button>
-                    </div>
-                  </div>
-              -->
               ${menuHtml}
             </div>
 
@@ -170,6 +175,7 @@ export class ItemViewController {
       </div>
     `;
     
+
     // Añadir eventos para cada elemento
     this.addItemEvents(itemElement, item, canEdit);
     
@@ -181,67 +187,6 @@ export class ItemViewController {
     }
   }
   
-  // // Actualizar un ítem en la vista
-  // updateItemInView(itemId, item) {
-  //   const itemElement = this.itemsContainer.querySelector(`[data-item-id="${itemId}"]`);
-  //   if (itemElement) {
-  //     // Actualizar estado completado
-  //     if (item.completed) {
-  //       itemElement.classList.add('item-completed');
-  //       itemElement.querySelector('.toggle-completed').classList.add('bg-primary', 'text-white');
-  //       itemElement.querySelector('.toggle-completed').innerHTML = '<i class="fas fa-check"></i>';
-  //     } else {
-  //       itemElement.classList.remove('item-completed');
-  //       itemElement.querySelector('.toggle-completed').classList.remove('bg-primary', 'text-white');
-  //       itemElement.querySelector('.toggle-completed').innerHTML = '';
-  //     }
-      
-  //     // Actualizar nombre
-  //     itemElement.querySelector('.item-name').textContent = item.name;
-      
-  //     // Actualizar cantidad
-  //     itemElement.querySelector('.quantity').textContent = item.quantity;
-      
-  //     // Activar/desactivar botón de disminuir
-  //     const decreaseBtn = itemElement.querySelector('.decrease-quantity');
-  //     if (item.quantity <= 1) {
-  //       decreaseBtn.classList.add('text-gray-300', 'cursor-not-allowed');
-  //       decreaseBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
-  //     } else {
-  //       decreaseBtn.classList.remove('text-gray-300', 'cursor-not-allowed');
-  //       decreaseBtn.classList.add('text-gray-600', 'hover:bg-gray-100');
-  //     }
-      
-  //     // Actualizar notas
-  //     const existingNotes = itemElement.querySelector('.text-sm.text-gray-600.bg-gray-50');
-  //     if (item.notes) {
-  //       if (existingNotes) {
-  //         existingNotes.textContent = item.notes;
-  //       } else {
-  //         // Crear el elemento de notas si no existe
-  //         const creatorBadge = itemElement.querySelector('.flex.items-center.text-xs.text-gray-500');
-  //         const notesElement = document.createElement('div');
-  //         notesElement.className = 'mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded';
-  //         notesElement.textContent = item.notes;
-          
-  //         // Insertar antes del badge de creador
-  //         if (creatorBadge) {
-  //           creatorBadge.parentNode.insertBefore(notesElement, creatorBadge);
-  //         } else {
-  //           itemElement.querySelector('.flex-grow').appendChild(notesElement);
-  //         }
-  //       }
-  //     } else {
-  //       // Eliminar notas si existen
-  //       if (existingNotes) {
-  //         existingNotes.remove();
-  //       }
-  //     }
-      
-  //     // Reordenar si es necesario (completado/no completado)
-  //     this.reorderItems();
-  //   }
-  // }
 
   // Actualizar un ítem en la vista
   updateItemInView(itemId, item) {
@@ -265,11 +210,14 @@ export class ItemViewController {
       itemElement.querySelector('.item-name').textContent = item.name;
       
       // Actualizar cantidad
-      itemElement.querySelector('.quantity').textContent = item.quantity;
-      
+      itemElement.querySelector('.quantity').textContent = item.quantity.toFixed(3).replace('.', ',');
+
+      //types-units
+      itemElement.querySelector('.types-units').textContent = item.typesUnits;
+
       // Activar/desactivar botón de disminuir
       const decreaseBtn = itemElement.querySelector('.decrease-quantity');
-      if (item.quantity <= 1) {
+      if (item.quantity <= 0) {
         decreaseBtn.classList.add('text-gray-300', 'cursor-not-allowed');
         decreaseBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
       } else {
@@ -313,16 +261,18 @@ export class ItemViewController {
       }
       
       // Actualizar notas
-      const existingNotes = itemElement.querySelector('.text-sm.text-gray-600.bg-gray-50');
+      // const existingNotes = itemElement.querySelector('.text-sm.text-gray-600.bg-gray-50');
+      const existingNotes = itemElement.querySelector('.edit-notes-text');
       if (item.notes) {
         if (existingNotes) {
-          existingNotes.textContent = item.notes;
+          existingNotes.textContent = truncateText(item.notes, 100);
         } else {
           // Crear el elemento de notas si no existe
-          const creatorBadge = itemElement.querySelector('.flex.items-center.text-xs.text-gray-500');
+          const creatorBadge = itemElement.querySelector('edit-notes-text.flex.items-center.text-xs.text-gray-500');
           const notesElement = document.createElement('div');
-          notesElement.className = 'mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded';
-          notesElement.textContent = item.notes;
+          // notesElement.className = 'mt-2 text-sm text-gray-600 bg-gray-50 p-2 rounded';
+          notesElement.className = 'edit-notes-text text-sm text-gray-600 p-2 rounded';
+          notesElement.textContent = truncateText(item.notes, 100);
           
           // Insertar antes del badge de creador
           if (creatorBadge) {
@@ -342,7 +292,7 @@ export class ItemViewController {
       this.reorderItems();
     }
   }
-  
+
   
   // Eliminar un ítem de la vista
   removeItemFromView(itemId) {
@@ -369,62 +319,6 @@ export class ItemViewController {
       }, 300);
     }
   }
-  
-  // // Añadir eventos a un elemento de ítem
-  // addItemEvents(itemElement, item, canEdit) {
-  //   // Botón para alternar completado
-  //   const toggleCompletedBtn = itemElement.querySelector('.toggle-completed');
-  //   toggleCompletedBtn.addEventListener('click', () => {
-  //     this.itemManager.toggleItemCompleted(item.id);
-  //   });
-    
-  //   // Botones de cantidad
-  //   const increaseBtn = itemElement.querySelector('.increase-quantity');
-  //   const decreaseBtn = itemElement.querySelector('.decrease-quantity');
-    
-  //   increaseBtn.addEventListener('click', () => {
-  //     this.itemManager.increaseItemQuantity(item.id);
-  //   });
-    
-  //   decreaseBtn.addEventListener('click', () => {
-  //     if (item.quantity > 1) {
-  //       this.itemManager.decreaseItemQuantity(item.id);
-  //     }
-  //   });
-    
-  //   // Menú desplegable
-  //   const menuBtn = itemElement.querySelector('.item-menu');
-  //   const dropdownMenu = itemElement.querySelector('.dropdown-menu');
-    
-  //   menuBtn.addEventListener('click', (e) => {
-  //     e.stopPropagation();
-  //     dropdownMenu.classList.toggle('hidden');
-      
-  //     // Cerrar al hacer clic fuera
-  //     const closeDropdown = () => {
-  //       dropdownMenu.classList.add('hidden');
-  //       document.removeEventListener('click', closeDropdown);
-  //     };
-      
-  //     // Añadir listener con pequeño delay para evitar que se cierre inmediatamente
-  //     setTimeout(() => {
-  //       document.addEventListener('click', closeDropdown);
-  //     }, 0);
-  //   });
-    
-  //   // Botón de editar notas
-  //   const editNotesBtn = itemElement.querySelector('.edit-notes');
-  //   editNotesBtn.addEventListener('click', () => {
-  //     this.showEditNotesModal(item);
-  //   });
-    
-  //   // Botón de eliminar ítem
-  //   const deleteItemBtn = itemElement.querySelector('.delete-item');
-  //   deleteItemBtn.addEventListener('click', () => {
-  //     this.showDeleteConfirmationModal(item);
-  //   });
-  // }
-
 
 // Añadir eventos a un elemento de ítem
 addItemEvents(itemElement, item, canEdit) {
@@ -437,16 +331,30 @@ addItemEvents(itemElement, item, canEdit) {
   // Botones de cantidad
   const increaseBtn = itemElement.querySelector('.increase-quantity');
   const decreaseBtn = itemElement.querySelector('.decrease-quantity');
+
+  //Qunatitat
+  const quantityValue = itemElement.querySelector('.quantity-value');
+  
   
   increaseBtn.addEventListener('click', () => {
     this.itemManager.increaseItemQuantity(item.id);
   });
   
   decreaseBtn.addEventListener('click', () => {
-    if (item.quantity > 1) {
+    if (item.quantity > 0) {
       this.itemManager.decreaseItemQuantity(item.id);
     }
   });
+
+  if (item.notes){
+    const editNotesText = itemElement.querySelector('div.edit-notes-text');
+    console.log("🚀 ~ ItemViewController ~ addItemToView ~ editNotesText:", editNotesText)
+    if (editNotesText) {
+    editNotesText.addEventListener('click', () => {
+      this.showEditNotesModal(item);
+    });
+    }
+  }
   
   // Solo añadir eventos de edición si el usuario tiene permisos
   if (canEdit) {
@@ -490,7 +398,59 @@ addItemEvents(itemElement, item, canEdit) {
   }
 }
 
+// <!-- Modal (inicialment ocult) -->
+// <div id="edit-modal" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center z-50">
+// <div class="bg-white rounded-lg p-6 w-80 shadow-lg">
+//   <h3 class="text-lg font-medium mb-4">Editar quantitat</h3>
+//   <input type="text" id="quantity-input" class="border rounded w-full p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" value="0,000">
+//   <div class="flex justify-end space-x-2">
+//     <button id="cancel-btn" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">Cancel·lar</button>
+//     <button id="confirm-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Acceptar</button>
+//   </div>
+// </div>
+// </div>
 
+
+  // Mostrar modal para editar cantidad
+  showEditQuantityModal(item) {
+
+    const itemQuantity = parseFloat(item.quantity.replace('.', ','));
+    const modalContent = `
+         <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">Editar quantitat</h2>
+        
+        <div class="mb-4">
+          <label for="item-quantity" class="block text-sm font-medium text-gray-700 mb-1">Quantitat</label>
+           <input type="text" 
+              id="quantity-input" 
+              class="border rounded w-full p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+              value=${itemQuantity}>          
+        </div>
+        
+        <div class="flex justify-end space-x-2">
+          <button 
+            id="btn-cancel-quantity" 
+            class="px-4 py-2 border rounded bg-red-100 text-gray-600 hover:bg-red-300  hover:text-white transition"
+          >Cancel·lar</button>
+          <button id="btn-save-quantity" class="px-4 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
+        </div>
+      </div>
+    `;
+    showModal(modalContent, () => {
+      const itemQuantity = document.getElementById('item-quantity');
+      
+      document.getElementById('btn-cancel-quantity').addEventListener('click', closeModal);
+      document.getElementById('btn-save-quantity').addEventListener('click', () => {
+        const quantity = parseFloat(itemQuantity.value.replace(',', '.'));
+        // this.itemManager.updateItemNotes(item.id, notes);
+        this.itemManager.manualModifyItemQuantity(item.id, quantity);
+        closeModal();
+      });
+      
+      // Enfocar el textarea
+      notesTextarea.focus();
+    });
+  }
   
   // Mostrar modal para editar notas
   showEditNotesModal(item) {
@@ -502,7 +462,7 @@ addItemEvents(itemElement, item, canEdit) {
           <label for="item-notes" class="block text-sm font-medium text-gray-700 mb-1">Notes (màx. 240 caràcters)</label>
           <textarea 
             id="item-notes" 
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+            class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
             maxlength="240"
             rows="4"
           >${item.notes || ''}</textarea>
@@ -514,8 +474,11 @@ addItemEvents(itemElement, item, canEdit) {
         </div>
         
         <div class="flex justify-end space-x-2">
-          <button id="btn-cancel-notes" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 transition">Cancel·lar</button>
-          <button id="btn-save-notes" class="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
+          <button 
+            id="btn-cancel-notes" 
+            class="px-4 py-2 border rounded bg-red-100 text-gray-600 hover:bg-red-300  hover:text-white transition"
+          >Cancel·lar</button>
+          <button id="btn-save-notes" class="px-4 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
         </div>
       </div>
     `;

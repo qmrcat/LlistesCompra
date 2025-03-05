@@ -92,6 +92,14 @@ export class ItemManager {
       return await this.updateItem(itemId, { completed: !item.completed });
     }
   }
+
+   // Modificació manual de la quantita de l'ítem
+   async manualModifyItemQuantity(itemId, quantity) {
+    const item = this.getItemById(itemId);
+    if (item) {
+      return await this.updateItem(itemId, { quantity: quantity });
+    }
+  }
   
   // Aumentar cantidad de un ítem
   async increaseItemQuantity(itemId) {
@@ -177,15 +185,22 @@ export class ItemManager {
   
   // Comprobar si el usuario puede editar el ítem (es propietario de la lista o creador del ítem)
   canUserEditItem(item) {
+    
+    console.log("🚀 ~ ItemManager ~ canUserEditItem ~ item:", item)
     const currentUser = getLoggedUser();
     if (!currentUser || !item) return false;
     
     // Verificar si es el creador del ítem
     const isCreator = this.isCurrentUserCreator(item);
+    console.log("🚀 ~ ItemManager ~ canUserEditItem ~ isCreator:", isCreator)
     
     // Verificar si es propietario de la lista
     const list = window.listManager?.getListById(this.listId);
+    console.log("🚀 ~ ItemManager ~ canUserEditItem ~ list:", list)
     const isOwner = list && list.userRole === 'owner';
+    console.log("🚀 ~ ItemManager ~ canUserEditItem ~ isOwner:", isOwner)
+
+    
     
     return isCreator || isOwner;
   }

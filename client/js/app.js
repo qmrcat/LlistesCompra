@@ -137,6 +137,7 @@ function showProfileModal() {
   const user = getLoggedUser();
   
   const modalContent = `
+    <!-- ProfileModal -->
     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
       <h2 class="text-xl font-bold mb-4">El meu perfil</h2>
       
@@ -162,12 +163,18 @@ function showProfileModal() {
       </div>
       
       <div class="flex justify-end space-x-2">
-        <button id="btn-cancel-profile" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 transition">Cancel·lar</button>
-        <button id="btn-save-profile" class="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
+        <button 
+          id="btn-cancel-profile" 
+          class="px-4 py-2 border rounded bg-red-100 text-gray-600 hover:bg-red-300  hover:text-white transition"
+        >Cancel·lar</button>
+        <button 
+          id="btn-save-profile" 
+          class="px-4 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition"
+          >Desar</button>
       </div>
     </div>
   `;
-  
+
   showModal(modalContent, () => {
     document.getElementById('btn-cancel-profile').addEventListener('click', closeModal);
     document.getElementById('btn-save-profile').addEventListener('click', updateProfile);
@@ -348,7 +355,7 @@ async function showListConfigModal(listId) {
           <input 
             type="text" 
             id="list-name" 
-            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+            class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
             value="${listDetails.name}"
           >
         </div>
@@ -398,10 +405,10 @@ async function showListConfigModal(listId) {
             <input 
               type="email" 
               id="invite-email" 
-              class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               placeholder="Correu electrònic"
             >
-            <button id="btn-send-invite" class="px-3 py-2 bg-primary hover:bg-blue-600 text-white rounded shadow transition">
+            <button id="btn-send-invite" class="px-3 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">
               <i class="fas fa-paper-plane"></i>
             </button>
           </div>
@@ -417,8 +424,11 @@ async function showListConfigModal(listId) {
           `}
           
           <div class="flex space-x-2">
-            <button id="btn-cancel-config" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 transition">Cancel·lar</button>
-            <button id="btn-save-config" class="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
+            <button 
+              id="btn-cancel-config" 
+              class="px-4 py-2 border rounded bg-red-100 text-gray-600 hover:bg-red-300  hover:text-white transition"
+            >Cancel·lar</button>
+            <button id="btn-save-config" class="px-4 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
           </div>
         </div>
       </div>
@@ -718,7 +728,8 @@ function closeModal() {
 function showModal(content, setupCallback) {
   const modalContainer = document.getElementById('modal-container');
   modalContainer.innerHTML = `
-    <div class="modal-content bg-transparent p-4 max-w-screen-sm w-full">
+    <!-- modal-container -->
+    <div class="modal-content bg-transparent p-4 max-w-screen-sm w-full flex items-center justify-center">
       ${content}
     </div>
   `;

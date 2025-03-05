@@ -12,7 +12,7 @@ const Item = sequelize.define('Item', {
     allowNull: false
   },
   quantity: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.DECIMAL(10, 3),
     allowNull: false,
     defaultValue: 1
   },
