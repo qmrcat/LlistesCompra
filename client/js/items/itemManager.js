@@ -121,6 +121,11 @@ export class ItemManager {
   async updateItemNotes(itemId, notes) {
     return await this.updateItem(itemId, { notes });
   }
+
+   // Actualizar nom del item
+  async updateItemName(itemId, name) {
+    return await this.updateItem(itemId, { name });
+  }
   
   // Eliminar un ítem
   async deleteItem(itemId) {

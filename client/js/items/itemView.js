@@ -96,7 +96,7 @@ export class ItemViewController {
 
 
     const itemElement = document.createElement('div');
-    itemElement.className = `item-container rounded-lg shadow p-4 ${item.completed ? 'item-completed' : ''} fade-in ${marginIntemAlias}`;
+    itemElement.className = `item-container rounded-lg shadow p-2 ${item.completed ? 'item-completed' : ''} fade-in ${marginIntemAlias}`;
     itemElement.dataset.itemId = item.id;
 
     // Determinar si el usuario puede editar este ítem
@@ -109,14 +109,18 @@ export class ItemViewController {
       </div>
     ` : '';
 
-  
-    
+      
     // Preparar badge de usuario creador
     const creatorBadge = `
-      <span class="flex items-center text-xs text-gray-500 mt-2">
-        <i class="fas fa-user text-primary mr-1"></i>
-        ${item.addedBy ? item.addedBy.alias : 'Usuari'}
-      </span>
+      <div class="flex items-start justify-between">
+        <span class="flex items-center text-xs text-gray-500 mt-2">
+          <i class="fas fa-user text-primary mr-1"></i>
+          ${item.addedBy ? item.addedBy.alias : 'Usuari'}
+        </span>
+        <button id="btn-send-invite" class="p-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition text-xs">
+            <i class="fas fa-paper-plane text-xs"></i>
+        </button>
+      </div>
     `;
 
     // Preparar menú de opciones (solo visible si puede editar)
@@ -328,12 +332,19 @@ addItemEvents(itemElement, item, canEdit) {
     this.itemManager.toggleItemCompleted(item.id);
   });
   
+  
+  const editNameText = itemElement.querySelector('.edit-name-text');
+
   // Botones de cantidad
   const increaseBtn = itemElement.querySelector('.increase-quantity');
   const decreaseBtn = itemElement.querySelector('.decrease-quantity');
 
   //Qunatitat
   const quantityValue = itemElement.querySelector('.quantity-value');
+  
+  editNameText.addEventListener('click', () => {
+    this.showEditNameText(item);
+  });
   
   
   increaseBtn.addEventListener('click', () => {
@@ -345,6 +356,12 @@ addItemEvents(itemElement, item, canEdit) {
       this.itemManager.decreaseItemQuantity(item.id);
     }
   });
+
+  quantityValue.addEventListener('click', () => {
+    this.showEditQuantityModal(item)
+    
+  });
+
 
   if (item.notes){
     const editNotesText = itemElement.querySelector('div.edit-notes-text');
@@ -398,23 +415,12 @@ addItemEvents(itemElement, item, canEdit) {
   }
 }
 
-// <!-- Modal (inicialment ocult) -->
-// <div id="edit-modal" class="fixed inset-0 hidden bg-black bg-opacity-50 flex items-center justify-center z-50">
-// <div class="bg-white rounded-lg p-6 w-80 shadow-lg">
-//   <h3 class="text-lg font-medium mb-4">Editar quantitat</h3>
-//   <input type="text" id="quantity-input" class="border rounded w-full p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" value="0,000">
-//   <div class="flex justify-end space-x-2">
-//     <button id="cancel-btn" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">Cancel·lar</button>
-//     <button id="confirm-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Acceptar</button>
-//   </div>
-// </div>
-// </div>
-
-
   // Mostrar modal para editar cantidad
   showEditQuantityModal(item) {
+  
 
-    const itemQuantity = parseFloat(item.quantity.replace('.', ','));
+    // const itemQuantity = parseFloat(item.quantity.replace('.', ','));
+    const itemQuantity = item.quantity.toFixed(3).replace('.', ',');
     const modalContent = `
          <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
         <h2 class="text-xl font-bold mb-4">Editar quantitat</h2>
@@ -422,7 +428,7 @@ addItemEvents(itemElement, item, canEdit) {
         <div class="mb-4">
           <label for="item-quantity" class="block text-sm font-medium text-gray-700 mb-1">Quantitat</label>
            <input type="text" 
-              id="quantity-input" 
+              id="item-quantity" 
               class="border rounded w-full p-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500" 
               value=${itemQuantity}>          
         </div>
@@ -444,14 +450,54 @@ addItemEvents(itemElement, item, canEdit) {
         const quantity = parseFloat(itemQuantity.value.replace(',', '.'));
         // this.itemManager.updateItemNotes(item.id, notes);
         this.itemManager.manualModifyItemQuantity(item.id, quantity);
+        item.quantity = quantity;
         closeModal();
       });
       
-      // Enfocar el textarea
-      notesTextarea.focus();
+      // Enfocar el input
+      itemQuantity.focus();
+      itemQuantity.select();
     });
   }
   
+  showEditNameText(item){
+    console.log("🚀 ~ ItemViewController ~ showEditNameText ~ item:", item)
+    
+    const modalContent = `
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+      <h2 class="text-xl font-bold mb-4">Modificar nom</h2>
+      
+      <div class="mb-4">
+        <input type="text" id="edit-item-name" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" placeholder="Nom de l'ítem" required=""
+        value=${item.name}>  
+      </div>
+      
+      <div class="flex justify-end space-x-2">
+        <button 
+          id="btn-cancel-notes" 
+          class="px-4 py-2 border rounded bg-red-100 text-gray-600 hover:bg-red-300  hover:text-white transition"
+        >Cancel·lar</button>
+        <button id="btn-save-notes" class="px-4 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
+      </div>
+    </div>
+    `;
+    showModal(modalContent, () => {
+      const itemName = document.getElementById('edit-item-name');
+      
+      document.getElementById('btn-cancel-notes').addEventListener('click', closeModal);
+      document.getElementById('btn-save-notes').addEventListener('click', () => {
+        const name = itemName.value.trim();
+        this.itemManager.updateItemName(item.id, name);
+        item.name = name;
+        closeModal();
+      });
+      
+      // Enfocar el input
+      itemName.focus();
+      itemName.select();
+    });
+  }
+
   // Mostrar modal para editar notas
   showEditNotesModal(item) {
     const modalContent = `
@@ -496,6 +542,7 @@ addItemEvents(itemElement, item, canEdit) {
       document.getElementById('btn-save-notes').addEventListener('click', () => {
         const notes = notesTextarea.value.trim();
         this.itemManager.updateItemNotes(item.id, notes);
+        item.notes = notes;
         closeModal();
       });
       
