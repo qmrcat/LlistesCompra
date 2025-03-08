@@ -20,10 +20,19 @@ Invitation.belongsTo(User, { foreignKey: 'invitedBy', as: 'inviter' });
 List.hasMany(Invitation, { foreignKey: 'listId' });
 Invitation.belongsTo(List, { foreignKey: 'listId' });
 
+// Relaciones para los mensajes
+Item.hasMany(Message, { foreignKey: 'itemId' });
+Message.belongsTo(Item, { foreignKey: 'itemId' });
+
+User.hasMany(Message, { foreignKey: 'senderId' });
+Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
+
+
 module.exports = {
   User,
   List,
   Item,
   ListUser,
-  Invitation
+  Invitation,
+  Message
 };

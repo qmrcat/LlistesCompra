@@ -3,3 +3,5 @@ node_modules
 README-EMAIL.md
 doc
 *.sqlite
+*copy*.*
+copies

@@ -25,6 +25,9 @@ export class ItemManager {
       console.log("🚀 ~ ItemManager ~ loadItems ~ this.items :", this.items )
       
       this.viewController.renderItems(this.items);
+
+      // Cargar contadores de mensajes no leídos
+      this.loadUnreadMessageCounts();
       
       return this.items;
     } catch (error) {
@@ -85,6 +88,17 @@ export class ItemManager {
     }
   }
   
+  // Cargar contadores de mensajes no leídos
+  async loadUnreadMessageCounts() {
+    try {
+      // Importar dinámicamente para evitar dependencias circulares
+      const messageService = await import('../utils/messageService.js');
+      await messageService.getUnreadMessageCounts(this.listId);
+    } catch (error) {
+      console.error(`Error al cargar contadores de mensajes para la lista ${this.listId}:`, error);
+    }
+  }
+
   // Cambiar el estado completado de un ítem
   async toggleItemCompleted(itemId) {
     const item = this.getItemById(itemId);
@@ -125,6 +139,10 @@ export class ItemManager {
    // Actualizar nom del item
   async updateItemName(itemId, name) {
     return await this.updateItem(itemId, { name });
+  }
+
+  async updateItemTypesUnits(itemId, typesUnits){
+    return await this.updateItem(itemId, { typesUnits });
   }
   
   // Eliminar un ítem

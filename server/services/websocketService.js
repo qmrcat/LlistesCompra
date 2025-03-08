@@ -187,6 +187,45 @@ const getUserSockets = (userId) => {
   return userSockets;
 };
 
+
+
+/**
+ * Notifica un nuevo mensaje a todos los miembros de una lista
+ * @param {number} listId - ID de la lista
+ * @param {number} itemId - ID del ítem al que pertenece el mensaje
+ * @param {object} message - Datos del mensaje
+ */
+const notifyNewMessage = (listId, itemId, message) => {
+  const io = getIO();
+  if (io) {
+    io.to(`list:${listId}`).emit('message:new', {
+      listId,
+      itemId,
+      message
+    });
+    console.log(`Notificación de nuevo mensaje enviada a la lista ${listId}, ítem ${itemId}`);
+  }
+};
+
+/**
+ * Notifica que los mensajes han sido leídos por un usuario
+ * @param {number} listId - ID de la lista
+ * @param {number} itemId - ID del ítem
+ * @param {number} userId - ID del usuario que leyó los mensajes
+ */
+const notifyMessagesRead = (listId, itemId, userId) => {
+  const io = getIO();
+  if (io) {
+    io.to(`list:${listId}`).emit('message:read', {
+      listId,
+      itemId,
+      userId
+    });
+    console.log(`Notificación de mensajes leídos enviada a la lista ${listId}, ítem ${itemId}`);
+  }
+};
+
+
 module.exports = {
   notifyItemAdded,
   notifyItemUpdated,
@@ -196,4 +235,6 @@ module.exports = {
   notifyUserRemoved,
   notifyUserRoleChanged,
   notifyInvitationRejected,
+  notifyNewMessage,
+  notifyMessagesRead,
 };

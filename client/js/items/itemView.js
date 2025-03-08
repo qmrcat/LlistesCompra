@@ -50,12 +50,22 @@ export class ItemViewController {
     
     this.itemsContainer.innerHTML = '';
     
-    // Ordenar ítems: primero no completados, luego por fecha
+    // // Ordenar ítems: primero no completados, luego por fecha
+    // const sortedItems = [...items].sort((a, b) => {
+    //   if (a.completed !== b.completed) {
+    //     return a.completed ? 1 : -1;
+    //   }
+    //   return new Date(b.createdAt) - new Date(a.createdAt);
+    // });
+
+    // Orden inverso: primero más antiguos, después más recientes (para que queden abajo)
     const sortedItems = [...items].sort((a, b) => {
+      // Primero por completado/no completado
       if (a.completed !== b.completed) {
-        return a.completed ? 1 : -1;
+        return a.completed ? -1 : 1; // Completados al principio (arriba)
       }
-      return new Date(b.createdAt) - new Date(a.createdAt);
+      // Después por fecha (más recientes abajo)
+      return new Date(a.createdAt) - new Date(b.createdAt);
     });
     
     sortedItems.forEach(item => {
@@ -104,8 +114,10 @@ export class ItemViewController {
     
     // Preparar notas (si existen)
     const notesHtml = item.notes ? `
-      <div class="edit-notes-text text-sm text-gray-600 p-2 rounded">
-      ${truncateText(item.notes, 100)}
+      <div  class="edit-notes-text text-xs text-gray-600 py-1 me-36 rounded cursor-pointer"
+            aria-label="Modificar la nota" data-microtip-position="top" data-microtip-size="medium"  role="tooltip"
+      >
+        <span>${truncateText(item.notes, 100)}</span>
       </div>
     ` : '';
 
@@ -117,9 +129,18 @@ export class ItemViewController {
           <i class="fas fa-user text-primary mr-1"></i>
           ${item.addedBy ? item.addedBy.alias : 'Usuari'}
         </span>
-        <button id="btn-send-invite" class="p-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition text-xs">
+        <button 
+          class="btn-xat-item py-2 ps-2 pe-3 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition text-xs cursor-pointer"
+          aria-label="Obrir el xat per aquest producte" data-microtip-position="top-left" data-microtip-size="medium"  role="tooltip"
+        >
             <i class="fas fa-paper-plane text-xs"></i>
         </button>
+        <div class="relative">
+          <button class="chat-button w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
+            <i class="fas fa-comments"></i>
+            <span class="message-badge hidden">0</span>
+          </button>
+        </div>        
       </div>
     `;
 
@@ -140,32 +161,41 @@ export class ItemViewController {
       </div>
     ` : '';
 
+    if (typeof item.quantity === 'string') item.quantity = parseFloat(item.quantity);
     const itemQuantity = item.quantity.toFixed(3).replace('.', ',')
 
     itemElement.innerHTML = `
       <div class="flex items-start">
         <div class="flex-shrink-0 mr-3">
-          <button class="toggle-completed w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center ${item.completed ? 'bg-primary text-white' : 'bg-white'}">
+          <button class="toggle-completed w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center ${item.completed ? 'bg-primary text-white' : 'bg-white'} cursor-pointer">
             ${item.completed ? '<i class="fas fa-check text-gray-600"></i>' : ''}
           </button>
         </div>
         
         <div class="flex-grow">
           <div class="flex items-start justify-between">
-            <h3 class="edit-name-text font-medium item-name">${item.name}</h3>
+            <h3 class="edit-name-text font-medium item-name cursor-pointer"
+                aria-label="Modificar el nom/descripció" data-microtip-position="top" data-microtip-size="medium"  role="tooltip"
+            >${item.name}</h3>
             <div class="flex items-center space-x-2">
               <div class="flex flex-col items-center space-x-1">
                 <div class="quantity-control flex items-center">
-                  <button class="decrease-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center ${item.quantity <= 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}">
+                  <button class="decrease-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center ${item.quantity <= 0 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-gray-100'}"
+                          aria-label="Restar 1 a la quantitat" data-microtip-position="top" data-microtip-size="medium"  role="tooltip"
+                  >
                     <i class="fas fa-minus"></i>
                   </button>
-                  <span class="quantity quantity-value mx-2 font-medium">${itemQuantity}</span>
-                  <button class="increase-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                  <span class="quantity quantity-value mx-2 font-medium cursor-pointer">${itemQuantity}</span>
+                  <button class="increase-quantity quantity-btn w-6 h-6 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100"
+                          aria-label="Sumar 1 a la quantitat" data-microtip-position="top" data-microtip-size="medium"  role="tooltip"
+                  >
                     <i class="fas fa-plus"></i>
                   </button>
                 </div>
                 <div class="flex items-center space-x-2">
-                  <h5 class="types-units text-sm">${item.typesUnits}</h5>
+                  <h5 class="types-units text-sm cursor-pointer"
+                      aria-label="Modificar el tipus d'unitat" data-microtip-position="top" data-microtip-size="medium"  role="tooltip"
+                  >${item.typesUnits}</h5>
                 </div>
               </div>
               ${menuHtml}
@@ -182,13 +212,21 @@ export class ItemViewController {
 
     // Añadir eventos para cada elemento
     this.addItemEvents(itemElement, item, canEdit);
+
+        // Añadir al contenedor (al principio o al final)
+    // En el estilo WhatsApp, los nuevos ítems siempre van al final (abajo)
+    this.itemsContainer.appendChild(itemElement);
     
     // Añadir al contenedor (al principio o al final)
-    if (prepend && this.itemsContainer.children.length > 0) {
-      this.itemsContainer.insertBefore(itemElement, this.itemsContainer.firstChild);
-    } else {
-      this.itemsContainer.appendChild(itemElement);
-    }
+    // if (prepend && this.itemsContainer.children.length > 0) {
+    //   this.itemsContainer.insertBefore(itemElement, this.itemsContainer.firstChild);
+    // } else {
+    //   this.itemsContainer.appendChild(itemElement);
+    // }
+
+    setTimeout(() => {
+      itemElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 100);
   }
   
 
@@ -214,6 +252,7 @@ export class ItemViewController {
       itemElement.querySelector('.item-name').textContent = item.name;
       
       // Actualizar cantidad
+      if (typeof item.quantity === 'string') item.quantity = parseFloat(item.quantity);
       itemElement.querySelector('.quantity').textContent = item.quantity.toFixed(3).replace('.', ',');
 
       //types-units
@@ -341,6 +380,38 @@ addItemEvents(itemElement, item, canEdit) {
 
   //Qunatitat
   const quantityValue = itemElement.querySelector('.quantity-value');
+  const typesUnits = itemElement.querySelector('.types-units');
+
+
+
+  const btnXatItem = itemElement.querySelector('.btn-xat-item');
+
+// XAT PRODUCTES
+
+// Botón de chat
+const chatButton = itemElement.querySelector('.chat-button');
+const messageBadge = chatButton.querySelector('.message-badge');
+
+chatButton.addEventListener('click', () => {
+  this.openChat(item);
+});
+
+// Suscribirse a actualizaciones de contador de mensajes no leídos
+import('../utils/messageService.js').then(messageService => {
+  const unsubscribe = messageService.subscribeToUnreadCount(item.id, (count) => {
+    if (count > 0) {
+      messageBadge.textContent = count > 99 ? '99+' : count;
+      messageBadge.classList.remove('hidden');
+    } else {
+      messageBadge.classList.add('hidden');
+    }
+  });
+  
+  // Almacenar función para cancelar suscripción (se podría usar para limpiar)
+  itemElement.dataset.unsubscribeMessages = true;
+});
+
+// FI XAT PRODUCTES
   
   editNameText.addEventListener('click', () => {
     this.showEditNameText(item);
@@ -360,6 +431,14 @@ addItemEvents(itemElement, item, canEdit) {
   quantityValue.addEventListener('click', () => {
     this.showEditQuantityModal(item)
     
+  });
+  typesUnits.addEventListener('click', () => {
+    this.showEditTypesUnitsModal(item)
+    
+  });
+
+  btnXatItem.addEventListener('click', () => {
+    this.showXatItem(item)    
   });
 
 
@@ -420,6 +499,7 @@ addItemEvents(itemElement, item, canEdit) {
   
 
     // const itemQuantity = parseFloat(item.quantity.replace('.', ','));
+    if (typeof item.quantity === 'string') item.quantity = parseFloat(item.quantity);
     const itemQuantity = item.quantity.toFixed(3).replace('.', ',');
     const modalContent = `
          <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
@@ -461,8 +541,6 @@ addItemEvents(itemElement, item, canEdit) {
   }
   
   showEditNameText(item){
-    console.log("🚀 ~ ItemViewController ~ showEditNameText ~ item:", item)
-    
     const modalContent = `
     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
       <h2 class="text-xl font-bold mb-4">Modificar nom</h2>
@@ -498,6 +576,42 @@ addItemEvents(itemElement, item, canEdit) {
     });
   }
 
+  showEditTypesUnitsModal(item){
+    const modalContent = `
+      <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4">Modificar tipus d'unitat</h2>
+        
+        <div class="mb-4">
+          <input type="text" id="edit-types-units" class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" placeholder="Tipus d'unitat" required=""
+          value=${item.typesUnits}>  
+        </div>
+        
+        <div class="flex justify-end space-x-2">
+          <button 
+            id="btn-cancel-notes" 
+            class="px-4 py-2 border rounded bg-red-100 text-gray-600 hover:bg-red-300  hover:text-white transition"
+          >Cancel·lar</button>
+          <button id="btn-save-notes" class="px-4 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
+        </div>
+      </div>
+      `;
+    showModal(modalContent, () => {
+        const itemTypesUnits = document.getElementById('edit-types-units');
+        
+        document.getElementById('btn-cancel-notes').addEventListener('click', closeModal);
+        document.getElementById('btn-save-notes').addEventListener('click', () => {
+          const typesUnits = itemTypesUnits.value.trim();
+          this.itemManager.updateItemTypesUnits(item.id, typesUnits);
+          item.typesUnits = typesUnits;
+          closeModal();
+        });
+        
+        // Enfocar el input
+        itemTypesUnits.focus();
+        itemTypesUnits.select();
+     });
+  }
+
   // Mostrar modal para editar notas
   showEditNotesModal(item) {
     const modalContent = `
@@ -526,7 +640,7 @@ addItemEvents(itemElement, item, canEdit) {
           >Cancel·lar</button>
           <button id="btn-save-notes" class="px-4 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
         </div>
-      </div>
+      </div> 
     `;
     
     showModal(modalContent, () => {
@@ -549,6 +663,10 @@ addItemEvents(itemElement, item, canEdit) {
       // Enfocar el textarea
       notesTextarea.focus();
     });
+  }
+
+  showXatItem(item){
+
   }
   
   // Mostrar modal de confirmación para eliminar ítem
@@ -581,9 +699,36 @@ addItemEvents(itemElement, item, canEdit) {
       });
     });
   }
+
+  // Reordenar ítems (completados arriba, más nuevos abajo)
+  reorderItems() {
+    const items = Array.from(this.itemsContainer.querySelectorAll('.item-container'));
+    if (items.length <= 1) return;
+    
+    // Ordenar elementos: primero completados, luego no completados
+    // Y dentro de cada grupo, los más antiguos arriba
+    items.sort((a, b) => {
+      const aCompleted = a.classList.contains('item-completed');
+      const bCompleted = b.classList.contains('item-completed');
+      
+      // Primero ordenar por estado completado
+      if (aCompleted !== bCompleted) {
+        return aCompleted ? -1 : 1; // Completados arriba
+      }
+      
+      // Si tienen el mismo estado, mantener el orden actual (más nuevos abajo)
+      // Nota: podríamos usar data-* para guardar la fecha de creación si necesitamos ordenar por fecha
+      return 0;
+    });
+    
+    // Reinsertar en el orden correcto
+    items.forEach(item => {
+      this.itemsContainer.appendChild(item);
+    });
+  }
   
   // Reordenar ítems (completados al final)
-  reorderItems() {
+  reorderItemsUltimPrimer() {
     const items = Array.from(this.itemsContainer.querySelectorAll('.item-container'));
     if (items.length <= 1) return;
     

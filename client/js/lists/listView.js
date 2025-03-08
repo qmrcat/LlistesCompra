@@ -186,7 +186,7 @@ async loadLists() {
     
     lists.forEach(list => {
       const card = document.createElement('div');
-      card.className = 'bg-slate-100 rounded-lg shadow-md p-4 list-card hover:shadow-lg transition-all';
+      card.className = 'bg-slate-100 rounded-lg shadow-md p-4 list-card hover:shadow-lg transition-all cursor-pointer';
       card.dataset.listId = list.id;
       
       // Determinar icono según rol

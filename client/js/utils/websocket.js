@@ -48,6 +48,10 @@ export function setupWebSocket() {
   // Eventos de invitaciones
   socket.on('invitation:rejected', handleInvitationRejected)
 
+  // Eventos de mensajes de chat
+  socket.on('message:new', handleNewMessage);
+  socket.on('message:read', handleMessagesRead);
+
 }
 
 /**
@@ -433,6 +437,71 @@ function handleInvitationRejected(data) {
   }
 }
 
+/**
+ * Manejador para nuevos mensajes de chat
+ */
+function handleNewMessage(data) {
+  console.log('WebSocket: Nuevo mensaje recibido', data);
+  
+  // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+  import('./messageService.js').then(messageService => {
+    messageService.handleNewMessage(data);
+  });
+  
+  // Si el modal de chat está abierto para este ítem, actualizar la conversación
+  const chatModal = document.getElementById(`chat-modal-${data.itemId}`);
+  if (chatModal) {
+    const chatContainer = chatModal.querySelector('.chat-messages');
+    if (chatContainer) {
+      // Actualizar el chat dinámicamente
+      updateChatWithNewMessage(chatContainer, data.message);
+    }
+  }
+}
+
+/**
+ * Manejador para mensajes leídos
+ */
+function handleMessagesRead(data) {
+  console.log('WebSocket: Mensajes marcados como leídos', data);
+  
+  // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+  import('./messageService.js').then(messageService => {
+    messageService.handleMessagesRead(data);
+  });
+}
+
+/**
+ * Actualiza el chat con un nuevo mensaje recibido
+ * @param {HTMLElement} chatContainer - Contenedor del chat
+ * @param {Object} message - Datos del mensaje
+ */
+function updateChatWithNewMessage(chatContainer, message) {
+  const currentUser = JSON.parse(localStorage.getItem('user'));
+  const isOwnMessage = currentUser && message.sender.id === currentUser.id;
+  
+  const messageElement = document.createElement('div');
+  messageElement.className = `chat-message ${isOwnMessage ? 'chat-message-own' : 'chat-message-other'} fade-in`;
+  messageElement.innerHTML = `
+    <div class="chat-bubble">
+      ${!isOwnMessage ? `<span class="chat-sender">${message.sender.alias}</span>` : ''}
+      <p>${message.content}</p>
+      <span class="chat-time">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+    </div>
+  `;
+  
+  chatContainer.appendChild(messageElement);
+  
+  // Scroll al final
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+  
+  // Si no es un mensaje propio, marcar como leído
+  if (!isOwnMessage) {
+    import('./messageService.js').then(messageService => {
+      messageService.markMessagesAsRead(message.itemId).catch(console.error);
+    });
+  }
+}
 
 
 /**
