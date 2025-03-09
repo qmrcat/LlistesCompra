@@ -48,6 +48,39 @@ html, body {
     animation: pulse 2s ease-in-out;
   }
   
+/* Estilos para modales */
+#modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 1rem; */
+  z-index: 1000; /* Valor alto para asegurar que esté encima de todo */
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 600px;
+  animation: modalIn 0.3s ease-out;
+  position: relative;
+  z-index: 1001; /* Más alto que el contenedor */
+}
+
+/* Para el modal de chat específicamente */
+[id^="chat-modal-"] {
+  position: relative;
+  z-index: 1002; /* Aún más alto para el chat */
+  max-height: 80vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
   @keyframes pulse {
     0% { background-color: rgba(33, 150, 243, 0.3); }
     50% { background-color: rgba(33, 150, 243, 0.1); }
@@ -80,6 +113,23 @@ html, body {
     /* Evitar zoom no deseado en dispositivos iOS */
     input, textarea, select, button {
       font-size: 16px; /* Evita zoom automático en iOS */
+    }
+
+    #modal-container {
+      align-items: flex-start;
+      padding: 0;
+    }
+    
+    .modal-content {
+      height: 100%;
+      max-width: 100%;
+      border-radius: 0;
+    }
+    
+    [id^="chat-modal-"] {
+      max-height: 90vh;
+      height: 90vh;
+      border-radius: 0;
     }
   }
 
@@ -146,7 +196,7 @@ html, body {
   min-width: 20px;
   height: 20px;
   border-radius: 10px;
-  display: flex;
+  /* display: flex; */
   align-items: center;
   justify-content: center;
   padding: 0 4px;

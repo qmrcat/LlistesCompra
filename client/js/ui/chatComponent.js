@@ -16,12 +16,15 @@ export function openChatModal(item) {
   if (existingModal) return;
   
   // Mostrar loading mientras se cargan los mensajes
-  const modalContent = `
-    <div id="chat-modal-${item.id}" class="bg-white rounded-lg shadow-xl w-full max-w-xl flex flex-col h-[80vh]">
+  //<div id="chat-modal-${item.id}" class="bg-white rounded-lg shadow-xl w-full max-w-xl flex flex-col h-[80vh] z-40">
+  //  <div class="p-4 border-b bg-primary text-white flex justify-between items-center">
+  const modalContent = `    
+    <div id="chat-modal-${item.id}" class="bg-white rounded-lg shadow-xl w-full h-full md:h-[80vh] flex flex-col">
       <!-- Cabecera del chat -->
-      <div class="p-4 border-b bg-primary text-white flex justify-between items-center">
-        <h2 class="text-lg font-bold">Xat: ${item.name}</h2>
-        <button id="btn-close-chat" class="text-white hover:text-gray-200">
+      
+      <div class="p-4 border-b bg-primary text-white flex justify-between items-center flex-shrink-0">
+        <h2 class="text-lg text-gray-600 font-bold">Xat del producte: ${item.name}</h2>
+        <button id="btn-close-chat" class="text-gray-600 hover:text-gray-200 text-lg cursor-pointer">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -45,12 +48,11 @@ export function openChatModal(item) {
             autocomplete="off"
             required
           >
-          <button 
+          <button
             type="submit" 
-            class="bg-primary hover:bg-blue-600 text-white px-4 py-3 rounded shadow transition"
-          >
-            <i class="fas fa-paper-plane"></i>
-          </button>
+            class="px-3 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">
+              <i class="fas fa-paper-plane"></i>
+            </button>
         </form>
       </div>
     </div>

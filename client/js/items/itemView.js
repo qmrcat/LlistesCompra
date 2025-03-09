@@ -129,16 +129,22 @@ export class ItemViewController {
           <i class="fas fa-user text-primary mr-1"></i>
           ${item.addedBy ? item.addedBy.alias : 'Usuari'}
         </span>
-        <button 
+        <!-- <button 
           class="btn-xat-item py-2 ps-2 pe-3 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition text-xs cursor-pointer"
           aria-label="Obrir el xat per aquest producte" data-microtip-position="top-left" data-microtip-size="medium"  role="tooltip"
         >
             <i class="fas fa-paper-plane text-xs"></i>
-        </button>
+        </button> -->
         <div class="relative">
-          <button class="chat-button w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
-            <i class="fas fa-comments"></i>
-            <span class="message-badge hidden">0</span>
+          <button 
+            class="chat-button w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
+            aria-label="Obrir el xat per aquest producte" data-microtip-position="top-left" data-microtip-size="medium"  role="tooltip"
+          >
+              <i class="fas fa-comments"></i>
+              <span 
+                class="message-badge hidden"
+                aria-label="Numero de missatges per llegir" data-microtip-position="top-left" data-microtip-size="medium"  role="tooltip"
+              >0</span>
           </button>
         </div>        
       </div>
@@ -384,7 +390,7 @@ addItemEvents(itemElement, item, canEdit) {
 
 
 
-  const btnXatItem = itemElement.querySelector('.btn-xat-item');
+  // const btnXatItem = itemElement.querySelector('.btn-xat-item');
 
 // XAT PRODUCTES
 
@@ -437,9 +443,9 @@ import('../utils/messageService.js').then(messageService => {
     
   });
 
-  btnXatItem.addEventListener('click', () => {
-    this.showXatItem(item)    
-  });
+  // btnXatItem.addEventListener('click', () => {
+  //   this.showXatItem(item)    
+  // });
 
 
   if (item.notes){
@@ -493,6 +499,13 @@ import('../utils/messageService.js').then(messageService => {
     }
   }
 }
+
+  // Abrir el chat para un ítem
+  openChat(item) {
+    import('../ui/chatComponent.js').then(module => {
+      module.openChatModal(item);
+    });
+  }
 
   // Mostrar modal para editar cantidad
   showEditQuantityModal(item) {
@@ -665,9 +678,9 @@ import('../utils/messageService.js').then(messageService => {
     });
   }
 
-  showXatItem(item){
-
-  }
+  // showXatItem(item){
+  // 
+  // }
   
   // Mostrar modal de confirmación para eliminar ítem
   showDeleteConfirmationModal(item) {

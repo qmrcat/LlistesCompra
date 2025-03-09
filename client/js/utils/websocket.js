@@ -52,6 +52,10 @@ export function setupWebSocket() {
   socket.on('message:new', handleNewMessage);
   socket.on('message:read', handleMessagesRead);
 
+  // Eventos de mensajes de chat de llista
+  socket.on('message-list:new', handleNewMessageList);
+  socket.on('message-list:read', handleMessagesReadList);
+
 }
 
 /**
@@ -460,6 +464,28 @@ function handleNewMessage(data) {
 }
 
 /**
+ * Manejador para nuevos mensajes de chat per a les llites
+ */
+function handleNewMessageList(data) {
+  console.log('WebSocket: Nuevo mensaje recibido', data);
+  
+  // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+  import('./messageService.js').then(messageService => {
+    messageService.handleNewMessage(data, true);
+  });
+  
+  // Si el modal de chat está abierto para este ítem, actualizar la conversación
+  const chatModal = document.getElementById(`chat-modal-list-${data.listId}`);
+  if (chatModal) {
+    const chatContainer = chatModal.querySelector('.chat-messages');
+    if (chatContainer) {
+      // Actualizar el chat dinámicamente
+      updateChatWithNewMessage(chatContainer, data.message, true);
+    }
+  }
+}
+
+/**
  * Manejador para mensajes leídos
  */
 function handleMessagesRead(data) {
@@ -476,7 +502,7 @@ function handleMessagesRead(data) {
  * @param {HTMLElement} chatContainer - Contenedor del chat
  * @param {Object} message - Datos del mensaje
  */
-function updateChatWithNewMessage(chatContainer, message) {
+function updateChatWithNewMessage(chatContainer, message, isList = false) {
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const isOwnMessage = currentUser && message.sender.id === currentUser.id;
   
@@ -498,7 +524,7 @@ function updateChatWithNewMessage(chatContainer, message) {
   // Si no es un mensaje propio, marcar como leído
   if (!isOwnMessage) {
     import('./messageService.js').then(messageService => {
-      messageService.markMessagesAsRead(message.itemId).catch(console.error);
+      messageService.markMessagesAsRead(message.itemId, isList).catch(console.error);
     });
   }
 }

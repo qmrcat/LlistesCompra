@@ -11,10 +11,14 @@ const Message = sequelize.define('Message', {
     type: DataTypes.TEXT,
     allowNull: false
   },
+  listId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
   // El ítem al que pertenece el mensaje
   itemId: {
     type: DataTypes.INTEGER,
-    allowNull: false
+    allowNull: true
   },
   // Usuario que envió el mensaje
   senderId: {

@@ -1,5 +1,6 @@
 const { Message, User, Item, List, ListUser } = require('../models');
 const { Op } = require('sequelize');
+const { sequelize } = require('../config/database');
 const websocketService = require('../services/websocketService');
 
 // Enviar un nuevo mensaje
@@ -209,6 +210,19 @@ const getUnreadMessageCount = async (req, res) => {
       attributes: ['id', 'itemId', 'readBy']
     });
 
+    // // Contar mensajes no leídos por ítem
+    // const unreadCounts = {};
+    // itemIds.forEach(itemId => {
+    //   unreadCounts[itemId] = 0;
+    // });
+
+    // messages.forEach(message => {
+    //   const readBy = message.readBy || [];
+    //   if (!readBy.includes(userId)) {
+    //     unreadCounts[message.itemId] = (unreadCounts[message.itemId] || 0) + 1;
+    //   }
+    // });
+    
     // Contar mensajes no leídos por ítem
     const unreadCounts = {};
     itemIds.forEach(itemId => {
@@ -220,7 +234,7 @@ const getUnreadMessageCount = async (req, res) => {
       if (!readBy.includes(userId)) {
         unreadCounts[message.itemId] = (unreadCounts[message.itemId] || 0) + 1;
       }
-    });
+    });    
 
     res.json({
       success: true,
@@ -268,15 +282,45 @@ const markMessagesAsRead = async (req, res) => {
     // Obtener mensajes no leídos del ítem
     const messages = await Message.findAll({
       where: { 
-        itemId: parseInt(itemId),
-        [Op.and]: [
-          sequelize.literal(`NOT JSON_CONTAINS(readBy, '${userId}')`)
-        ]
+        itemId: parseInt(itemId)
       }
     });
+    // const messages = await Message.findAll({
+    //   where: { 
+    //     itemId: parseInt(itemId),
+    //     [Op.and]: [
+    //       sequelize.literal(`NOT JSON_CONTAINS(readBy, '${userId}')`)
+    //     ]
+    //   }
+    // });
 
-    // Actualizar cada mensaje para añadir al usuario a readBy
-    for (const message of messages) {
+    // Filtrar mensajes que el usuario no ha leído
+    const unreadMessages = messages.filter(message => {
+      const readBy = message.readBy || [];
+      return !readBy.includes(userId);
+    });
+
+
+    // // Actualizar cada mensaje para añadir al usuario a readBy
+    // for (const message of messages) {
+    //   const readBy = message.readBy || [];
+    //   if (!readBy.includes(userId)) {
+    //     readBy.push(userId);
+    //     await message.update({ readBy });
+    //   }
+    // }
+
+    // // Notificar por WebSocket
+    // if (messages.length > 0) {
+    //   websocketService.notifyMessagesRead(item.listId, parseInt(itemId), userId);
+    // }
+
+    // res.json({
+    //   success: true,
+    //   message: 'Mensajes marcados como leídos',
+    //   count: messages.length
+    // });
+    for (const message of unreadMessages) {
       const readBy = message.readBy || [];
       if (!readBy.includes(userId)) {
         readBy.push(userId);
@@ -285,14 +329,14 @@ const markMessagesAsRead = async (req, res) => {
     }
 
     // Notificar por WebSocket
-    if (messages.length > 0) {
+    if (unreadMessages.length > 0) {
       websocketService.notifyMessagesRead(item.listId, parseInt(itemId), userId);
     }
 
     res.json({
       success: true,
       message: 'Mensajes marcados como leídos',
-      count: messages.length
+      count: unreadMessages.length
     });
   } catch (error) {
     console.error('Error al marcar mensajes como leídos:', error);
