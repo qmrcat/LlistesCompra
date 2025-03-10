@@ -8,88 +8,112 @@ import { getLoggedUser } from '../auth/auth.js';
  * Crea el modal de chat para un ítem específico
  * @param {Object} item - Información del ítem
  */
-export function openChatModal(item) {
-  if (!item) return;
-  
-  // Si ya existe un modal de chat abierto, cerrarlo
-  const existingModal = document.getElementById(`chat-modal-${item.id}`);
-  if (existingModal) return;
-  
-  // Mostrar loading mientras se cargan los mensajes
-  //<div id="chat-modal-${item.id}" class="bg-white rounded-lg shadow-xl w-full max-w-xl flex flex-col h-[80vh] z-40">
-  //  <div class="p-4 border-b bg-primary text-white flex justify-between items-center">
-  const modalContent = `    
-    <div id="chat-modal-${item.id}" class="bg-white rounded-lg shadow-xl w-full h-full md:h-[80vh] flex flex-col">
-      <!-- Cabecera del chat -->
-      
-      <div class="p-4 border-b bg-primary text-white flex justify-between items-center flex-shrink-0">
-        <h2 class="text-lg text-gray-600 font-bold">Xat del producte: ${item.name}</h2>
-        <button id="btn-close-chat" class="text-gray-600 hover:text-gray-200 text-lg cursor-pointer">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      
-      <!-- Contenedor de mensajes (scrollable) -->
-      <div class="chat-messages flex-grow overflow-y-auto p-4 bg-gray-50">
-        <div class="text-center py-8">
-          <div class="loader"></div>
-          <p class="mt-2 text-sm text-gray-500">Carregant missatges...</p>
+export function openChatModal(item, isList = false) {
+    if (!item) return;
+    
+    let existingModal;
+    // Si ya existe un modal de chat abierto, cerrarlo
+    if (!isList){
+        existingModal = document.getElementById(`chat-modal-${item.id}`);
+    }else{
+        existingModal = document.getElementById(`chat-modal-list`);
+    }
+    if (existingModal) return;
+    
+    // Mostrar loading mientras se cargan los mensajes
+    //<div id="chat-modal-${item.id}" class="bg-white rounded-lg shadow-xl w-full max-w-xl flex flex-col h-[80vh] z-40">
+    //  <div class="p-4 border-b bg-primary text-white flex justify-between items-center">
+
+    const itemId = !isList ? item.id : item;
+    const modalID = !isList ? item.id : 'list';
+    const titolModal = !isList ? `Xat del producte: ${item.name}` : 'Xat de la llista actual'; 
+    const formModal = !isList ? `chat-form-${item.id}` : 'chat-form-list';
+    const inputModal = !isList ? `chat-input-${item.id}` : 'chat-input-list'
+    const colorFons = !isList ? 'bg-gray-50' : 'bg-lime-100';
+
+    const modalContent = `    
+      <div id="chat-modal-${modalID}" class="bg-white rounded-lg shadow-xl w-full h-full md:h-[80vh] flex flex-col">
+        <!-- Cabecera del chat -->
+        
+        <div class="p-4 border-b bg-primary text-white flex justify-between items-center flex-shrink-0">
+          <h2 class="text-lg text-gray-600 font-bold">${titolModal}</h2>
+          <button id="btn-close-chat" class="text-gray-600 hover:text-gray-200 text-lg cursor-pointer">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <!-- Contenedor de mensajes (scrollable) -->
+        <div class="chat-messages flex-grow overflow-y-auto p-4 ${colorFons}">
+          <div class="text-center py-8">
+            <div class="loader"></div>
+            <p class="mt-2 text-sm text-gray-500">Carregant missatges...</p>
+          </div>
+        </div>
+        
+        <!-- Formulario para enviar mensajes -->
+        <div class="p-3 border-t bg-white">
+          <form id="${formModal}" class="flex space-x-2">
+            <input 
+              type="text" 
+              id="${inputModal}" 
+              class="flex-grow px-3 py-3 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
+              placeholder="Escriu un missatge..."
+              autocomplete="off"
+              required
+            >
+            <button
+              type="submit" 
+              class="px-3 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+          </form>
         </div>
       </div>
+    `;
+    
+    // Mostrar el modal
+    showModal(modalContent, async (modalID, inputModal, itemId, isList = false) => {
+
+      console.log("🚀 ~ showModal ~ isList:", isList)
+      // Configurar botón de cierre
+      document.getElementById('btn-close-chat').addEventListener('click', closeModal);
       
-      <!-- Formulario para enviar mensajes -->
-      <div class="p-3 border-t bg-white">
-        <form id="chat-form-${item.id}" class="flex space-x-2">
-          <input 
-            type="text" 
-            id="chat-input-${item.id}" 
-            class="flex-grow px-3 py-3 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
-            placeholder="Escriu un missatge..."
-            autocomplete="off"
-            required
-          >
-          <button
-            type="submit" 
-            class="px-3 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">
-              <i class="fas fa-paper-plane"></i>
-            </button>
-        </form>
-      </div>
-    </div>
-  `;
-  
-  // Mostrar el modal
-  showModal(modalContent, async () => {
-    // Configurar botón de cierre
-    document.getElementById('btn-close-chat').addEventListener('click', closeModal);
-    
-    // Configurar formulario para enviar mensajes
-    const chatForm = document.getElementById(`chat-form-${item.id}`);
-    chatForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      sendChatMessage(item.id);
+      const chatModalId = `chat-form-${modalID}`
+      // Configurar formulario para enviar mensajes
+      console.log("🚀 ~ showModal ~ chatModalId:", chatModalId)
+
+      const chatForm = document.getElementById( chatModalId);
+      chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        sendChatMessage(itemId, isList);
+      });
+      
+      // Enfocar input
+      document.getElementById(inputModal).focus();
+      
+      // Cargar mensajes
+      try {
+        await loadChatMessages(itemId, isList);
+      } catch (error) {
+        showNotification('Error al carregar els missatges', 'error');
+      }
     });
-    
-    // Enfocar input
-    document.getElementById(`chat-input-${item.id}`).focus();
-    
-    // Cargar mensajes
-    try {
-      await loadChatMessages(item.id);
-    } catch (error) {
-      showNotification('Error al carregar els missatges', 'error');
-    }
-  });
 }
 
 /**
  * Carga los mensajes de un ítem
  * @param {number} itemId - ID del ítem
  */
-async function loadChatMessages(itemId) {
+async function loadChatMessages(itemId, isList = false) {
   try {
-    const messages = await getItemMessages(itemId);
-    const chatContainer = document.querySelector(`#chat-modal-${itemId} .chat-messages`);
+    const messages = await getItemMessages(itemId, isList);
+    let chatContainer;
+
+    if (!isList){
+        chatContainer = document.querySelector(`#chat-modal-${itemId} .chat-messages`);
+    }else{
+        chatContainer = document.querySelector(`#chat-modal-list .chat-messages`);
+    }
     
     if (chatContainer) {
       // Limpiar contenedor
@@ -140,8 +164,15 @@ async function loadChatMessages(itemId) {
  * Envía un mensaje en el chat
  * @param {number} itemId - ID del ítem
  */
-async function sendChatMessage(itemId) {
-  const inputElement = document.getElementById(`chat-input-${itemId}`);
+async function sendChatMessage(itemId, isList = false) {
+
+  let inputElement
+  if (!isList){
+    inputElement = document.getElementById(`chat-input-${itemId}`);
+  }else{
+    inputElement = document.getElementById(`chat-input-list`);
+  } 
+
   const content = inputElement.value.trim();
   
   if (!content) return;
@@ -151,7 +182,7 @@ async function sendChatMessage(itemId) {
     inputElement.disabled = true;
     
     // Enviar mensaje
-    await sendMessage(itemId, content);
+    await sendMessage(itemId, content, isList);
     
     // Limpiar input
     inputElement.value = '';
@@ -160,7 +191,7 @@ async function sendChatMessage(itemId) {
     inputElement.disabled = false;
     inputElement.focus();
   } catch (error) {
-    console.error(`Error al enviar mensaje para el ítem ${itemId}:`, error);
+    console.error(`Error al enviar mensaje para el ítem/list ${itemId}:`, error);
     showNotification('Error al enviar el missatge', 'error');
     
     // Rehabilitar input en caso de error

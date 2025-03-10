@@ -46,7 +46,11 @@
     <div id="lists-container" class="hidden h-full overflow-auto py-4 px-4">
       <div class="flex justify-between items-center mb-6">
         <h2 class="text-xl font-bold">Les meves llistes de compra</h2>
-        <button id="btn-new-list" class="bg-blue-400 hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition">
+        <button 
+          id="btn-new-list" 
+          class="bg-blue-400 hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition"
+          aria-label="Crear una nova llista" data-microtip-position="bottom-left" data-microtip-size="medium" role="tooltip"
+        >
           <i class="fas fa-plus mr-2"></i>Nova llista
         </button>
       </div>
@@ -74,10 +78,29 @@
           <span id="list-participants" class="text-sm bg-blue-300 text-blue-800 px-2 py-1 rounded-full">
             <i class="fas fa-users mr-1"></i>0
           </span>
-          <button id="btn-refresh-items" class="text-sm bg-blue-100 hover:bg-blue-300 text-blue-800 px-2 py-1 rounded shadow transition cursor-pointer">
+          <div class="relative">
+            <button 
+              class="chat-button-list w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer relative" 
+              aria-label="Obrir el xat per aquesta llista" data-microtip-position="bottom-left" data-microtip-size="medium"  role="tooltip"
+            >
+              <i class="fas fa-comments"></i>
+              <span 
+                class="message-badge-list absolute top-0 right-0 w-6 h-6 transform translate-x-1/3 -translate-y-1/3 shadow-md bg-red-500 text-white rounded-full text-sm/6 flex items-center justify-center hidden"
+              ></span>
+            </button>
+          </div>          
+          <button 
+              id="btn-refresh-items" 
+              class="text-sm bg-blue-100 hover:bg-blue-300 text-blue-800 px-2 py-1 rounded shadow transition cursor-pointer"
+              aria-label="Refrescar la llista" data-microtip-position="bottom-left" data-microtip-size="medium" role="tooltip"
+            >
             <i class="fas fa-sync-alt"></i>
           </button>
-          <button id="btn-list-config" class="text-sm bg-blue-400 hover:bg-blue-600 text-white px-2 py-1 rounded shadow transition cursor-pointer">
+          <button 
+              id="btn-list-config" 
+              class="text-sm bg-blue-400 hover:bg-blue-600 text-white px-2 py-1 rounded shadow transition cursor-pointer"              
+              aria-label="Configurar la llista" data-microtip-position="bottom-left" data-microtip-size="medium" role="tooltip"
+          >
             <i class="fas fa-cog"></i>
           </button>
         </div>

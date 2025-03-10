@@ -163,14 +163,16 @@ export function handleMessagesRead(data, isList = false) {
  */
 export function subscribeToUnreadCount(itemId, callback, isList = false) {
 
+  let count = 0;
+
   if (isList) {
     messageCallbacksList[itemId] = callback;
     // Notificar inmediatamente con el valor actual
-    const count = unreadMessageCountsList[itemId] || 0;
+    count = unreadMessageCountsList[itemId] || 0;
   } else {
     messageCallbacks[itemId] = callback;
     // Notificar inmediatamente con el valor actual
-    const count = unreadMessageCounts[itemId] || 0;
+    count = unreadMessageCounts[itemId] || 0;
   }
   
 

@@ -195,12 +195,12 @@ const getUserSockets = (userId) => {
  * @param {number} itemId - ID del ítem al que pertenece el mensaje
  * @param {object} message - Datos del mensaje
  */
-const notifyNewMessage = (listId, itemId, message) => {
+const notifyNewMessage = (listId, itemId, message, isList = false) => {
   const io = getIO();
   if (io) {
     io.to(`list:${listId}`).emit('message:new', {
       listId,
-      itemId,
+      itemId: isList ? null : itemId,
       message
     });
     console.log(`Notificación de nuevo mensaje enviada a la lista ${listId}, ítem ${itemId}`);
@@ -213,12 +213,12 @@ const notifyNewMessage = (listId, itemId, message) => {
  * @param {number} itemId - ID del ítem
  * @param {number} userId - ID del usuario que leyó los mensajes
  */
-const notifyMessagesRead = (listId, itemId, userId) => {
+const notifyMessagesRead = (listId, itemId, userId, isList = false) => {
   const io = getIO();
   if (io) {
     io.to(`list:${listId}`).emit('message:read', {
       listId,
-      itemId,
+      itemId: isList ? null : itemId,
       userId
     });
     console.log(`Notificación de mensajes leídos enviada a la lista ${listId}, ítem ${itemId}`);

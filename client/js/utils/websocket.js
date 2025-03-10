@@ -497,6 +497,19 @@ function handleMessagesRead(data) {
   });
 }
 
+
+/**
+ * Manejador para mensajes leídos
+ */
+function handleMessagesReadList(data) {
+  console.log('WebSocket: Mensajes marcados como leídos', data);
+  
+  // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+  import('./messageService.js').then(messageService => {
+    messageService.handleMessagesRead(data, true);
+  });
+}
+
 /**
  * Actualiza el chat con un nuevo mensaje recibido
  * @param {HTMLElement} chatContainer - Contenedor del chat

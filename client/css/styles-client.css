@@ -185,8 +185,8 @@ html, body {
   margin-top: 2px;
 }
 
-/* Badge contador de mensajes */
-.message-badge {
+/* Badge contador de mensajes
+._message-badge {
   position: absolute;
   top: -5px;
   right: -5px;
@@ -196,10 +196,25 @@ html, body {
   min-width: 20px;
   height: 20px;
   border-radius: 10px;
-  /* display: flex; */
+  display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 4px;
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
+} */
+
+/* .message-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: red;
+  color: white;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+} */

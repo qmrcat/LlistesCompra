@@ -21,12 +21,44 @@ const btnListConfig = document.getElementById('btn-list-config');
 const newItemForm = document.getElementById('new-item-form');
 const authLoader = document.getElementById('auth-loader');
 
+// Botón de chat
+const chatButtonList = document.querySelector('.chat-button-list');
+const messageBadgeList = chatButtonList.querySelector('.message-badge-list');
+
+
+
 // Instancias de gestores
 export let listManager = null;
 export let listViewController = null;
 export let itemManager = null;
 export let currentListId = null;
 export let aliasUsuari = null;
+
+// Obrir chat de la llista
+function openChatList(listId) {
+  import('./ui/chatComponent.js').then(module => {
+    module.openChatModal(listId, true);
+  });
+}
+
+chatButtonList.addEventListener('click', () => {
+  openChatList(currentListId);
+});
+
+// Suscribirse a actualizaciones de contador de mensajes no leídos
+import('../utils/messageService.js').then(messageService => {
+  const unsubscribe = messageService.subscribeToUnreadCount(currentListId, (count) => {
+    if (count > 0) {
+      messageBadgeList.textContent = count > 9 ? '9+' : count;
+      messageBadgeList.classList.remove('hidden');
+    } else {
+      messageBadgeList.classList.add('hidden');
+    }
+  }, true);
+  
+  // Almacenar función para cancelar suscripción (se podría usar para limpiar)
+  // itemElement.dataset.unsubscribeMessages = true;
+});
 
 
 // Inicialización de la aplicación

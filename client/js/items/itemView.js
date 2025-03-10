@@ -121,32 +121,24 @@ export class ItemViewController {
       </div>
     ` : '';
 
-      
     // Preparar badge de usuario creador
     const creatorBadge = `
-      <div class="flex items-start justify-between">
+      <div class="flex items-start justify-between me-4">
         <span class="flex items-center text-xs text-gray-500 mt-2">
           <i class="fas fa-user text-primary mr-1"></i>
           ${item.addedBy ? item.addedBy.alias : 'Usuari'}
         </span>
-        <!-- <button 
-          class="btn-xat-item py-2 ps-2 pe-3 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition text-xs cursor-pointer"
-          aria-label="Obrir el xat per aquest producte" data-microtip-position="top-left" data-microtip-size="medium"  role="tooltip"
-        >
-            <i class="fas fa-paper-plane text-xs"></i>
-        </button> -->
         <div class="relative">
           <button 
-            class="chat-button w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer"
+            class="chat-button w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer relative" 
             aria-label="Obrir el xat per aquest producte" data-microtip-position="top-left" data-microtip-size="medium"  role="tooltip"
           >
-              <i class="fas fa-comments"></i>
-              <span 
-                class="message-badge hidden"
-                aria-label="Numero de missatges per llegir" data-microtip-position="top-left" data-microtip-size="medium"  role="tooltip"
-              >0</span>
+            <i class="fas fa-comments"></i>
+            <span 
+              class="message-badge absolute top-0 right-0 w-6 h-6 transform translate-x-1/3 -translate-y-1/3 shadow-md bg-red-500 text-white rounded-full hidden text-sm pt-0.5"
+            ></span>
           </button>
-        </div>        
+        </div>
       </div>
     `;
 
@@ -406,10 +398,12 @@ chatButton.addEventListener('click', () => {
 import('../utils/messageService.js').then(messageService => {
   const unsubscribe = messageService.subscribeToUnreadCount(item.id, (count) => {
     if (count > 0) {
-      messageBadge.textContent = count > 99 ? '99+' : count;
+      messageBadge.textContent = count > 9 ? '9+' : count;
       messageBadge.classList.remove('hidden');
+      // messageBadge.classList.add('flex');
     } else {
       messageBadge.classList.add('hidden');
+      // messageBadge.classList.remove('flex');
     }
   });
   
