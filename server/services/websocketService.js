@@ -196,9 +196,10 @@ const getUserSockets = (userId) => {
  * @param {object} message - Datos del mensaje
  */
 const notifyNewMessage = (listId, itemId, message, isList = false) => {
+  console.log("🚀 ~ notifyNewMessage ~ message:", message)
   const io = getIO();
   if (io) {
-    io.to(`list:${listId}`).emit('message:new', {
+    io.to(`list:${listId}`).emit((!isList ? 'message:new' : 'message-list:new'), {
       listId,
       itemId: isList ? null : itemId,
       message

@@ -16,6 +16,6 @@ router.put('/read/item/:itemId', messageController.markMessagesAsRead); // Marca
 router.post('/list/:listId', messageController.sendMessage); // Envia un missatge
 router.get('/list/:listId', messageController.getItemMessages); // Obtenir tots els missatges d'una llista
 router.get('/unread-list/:listId', messageController.getUnreadMessageCount); // Obtenir el nombre de missatges no llegits d'una llista
-router.put('/read/list/:itemId', messageController.markMessagesAsRead); // Marcar els missatges com llegits d'una llista
+router.put('/read/list/:listId', messageController.markMessagesAsRead); // Marcar els missatges com llegits d'una llista
 
 module.exports = router;

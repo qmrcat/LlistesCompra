@@ -36,6 +36,18 @@ const Message = sequelize.define('Message', {
     set(value) {
       this.setDataValue('readBy', JSON.stringify(value));
     }
+  },
+  // Usuarios que han leído el mensaje (array de IDs)
+  deleteBy: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+    get() {
+      const rawValue = this.getDataValue('deleteBy');
+      return rawValue ? JSON.parse(rawValue) : [];
+    },
+    set(value) {
+      this.setDataValue('deleteBy', JSON.stringify(value));
+    }
   }
 });
 

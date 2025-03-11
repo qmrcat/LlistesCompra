@@ -15,10 +15,11 @@ const sendMessage = async (req, res) => {
 
     let itemId, listId
 
+
     if(!isList) itemId = req.params.itemId;
           else  listId = req.params.listId;
 
-    const { content } = req.body;
+          const { content } = req.body;
     const userId = req.user.id;
 
     let item, list;
@@ -53,23 +54,6 @@ const sendMessage = async (req, res) => {
               as: 'creator',
               attributes: ['id', 'alias']
             }]
-          },
-          {
-            model: Invitation,
-            where: {
-              accepted: false,
-              expiresAt: {
-                [Op.gt]: new Date()
-              }
-            },
-            required: false,
-            include: [
-              {
-                model: User,
-                as: 'inviter',
-                attributes: ['id', 'alias']
-              }
-            ]
           }
         ]
       });
@@ -103,7 +87,8 @@ const sendMessage = async (req, res) => {
       itemId: !isList ? parseInt(itemId) : null,
       listId: !isList ? null : parseInt(listId),
       senderId: userId,
-      readBy: [userId] // El remitente ya lo ha leído
+      readBy: [userId], // El remitent ja ha llegit el missatge
+      deleteBy: []
     });
 
     // Obtener el mensaje con información del remitente
@@ -126,11 +111,12 @@ const sendMessage = async (req, res) => {
         alias: messageWithSender.sender.alias
       },
       readBy: messageWithSender.readBy,
+      deleteBy: messageWithSender.deleteBy,
       createdAt: messageWithSender.createdAt
     };
 
     // Notificar por WebSocket
-    websocketService.notifyNewMessage(item.listId, (isList ? null : parseInt(itemId)), formattedMessage, isList);
+    websocketService.notifyNewMessage((!isList ? item.listId : listId), (isList ? null : parseInt(listId)), formattedMessage, isList);
 
     res.status(201).json({
       success: true,
@@ -144,6 +130,8 @@ const sendMessage = async (req, res) => {
       message: 'Error al enviar missatge'
     });
   }
+    
+    
 };
 
 // Obtener mensajes de un ítem
@@ -194,23 +182,6 @@ const getItemMessages = async (req, res) => {
                   as: 'creator',
                   attributes: ['id', 'alias']
                 }]
-              },
-              {
-                model: Invitation,
-                where: {
-                  accepted: false,
-                  expiresAt: {
-                    [Op.gt]: new Date()
-                  }
-                },
-                required: false,
-                include: [
-                  {
-                    model: User,
-                    as: 'inviter',
-                    attributes: ['id', 'alias']
-                  }
-                ]
               }
             ]
           });
@@ -286,6 +257,7 @@ const getItemMessages = async (req, res) => {
           alias: message.sender.alias
         },
         readBy,
+        deleteBy: message.deleteBy,
         createdAt: message.createdAt
       };
     });
@@ -297,7 +269,7 @@ const getItemMessages = async (req, res) => {
       ));
 
       // Notificar que los mensajes han sido leídos
-      websocketService.notifyMessagesRead(item.listId, (isList ? null : parseInt(itemId)), userId);
+      websocketService.notifyMessagesRead(( !isList ? item.listId : listId ), (!isList ? parseInt(listId) : null ), userId);
       
     }
 
@@ -411,12 +383,16 @@ const getUnreadMessageCount = async (req, res) => {
 const markMessagesAsRead = async (req, res) => {
   try {
     const fullPath = req.originalUrl; 
+    console.log("🚀 ~ markMessagesAsRead ~ fullPath:", fullPath)
     const basePath = req.baseUrl + req.path;
     // Comprovar si la ruta conté '/list'
     const isList = fullPath.includes('/list/');
+    console.log("🚀 ~ markMessagesAsRead ~ isList:", isList)
 
     let itemId, listId
 
+    console.log("🚀 ~ markMessagesAsRead ~ req.params:", req.params)
+    
     if(!isList) itemId = req.params.itemId;
           else  listId = req.params.listId;
 

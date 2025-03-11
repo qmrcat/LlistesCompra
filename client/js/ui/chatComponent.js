@@ -61,6 +61,7 @@ export function openChatModal(item, isList = false) {
               autocomplete="off"
               required
             >
+            <input type="hidden" id="tipusXat" name="tipusXat" value="${isList ? 'list' : 'item'}">
             <button
               type="submit" 
               class="px-3 py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition">
@@ -72,22 +73,28 @@ export function openChatModal(item, isList = false) {
     `;
     
     // Mostrar el modal
-    showModal(modalContent, async (modalID, inputModal, itemId, isList = false) => {
+    // showModal(modalContent, async (modalID, inputModal, itemId, isList = false) => {
+    showModal(modalContent, async () => {
+    console.log("🚀 ~ showModal ~ itemId:", itemId)
 
-      console.log("🚀 ~ showModal ~ isList:", isList)
       // Configurar botón de cierre
-      document.getElementById('btn-close-chat').addEventListener('click', closeModal);
+      const modalContainer = document.getElementById('modal-container');
       
-      const chatModalId = `chat-form-${modalID}`
+      // document.getElementById('btn-close-chat').addEventListener('click', closeModal);
+      const chatModalId = !isList ? `chat-form-${itemId}` : `chat-form-list`;
       // Configurar formulario para enviar mensajes
-      console.log("🚀 ~ showModal ~ chatModalId:", chatModalId)
+      const chatForm = document.getElementById( chatModalId );
 
-      const chatForm = document.getElementById( chatModalId);
+      //chatForm.getElementById('btn-close-chat').addEventListener('click', closeModal);
+      const btnCloseChat = document.getElementById('btn-close-chat')
+
       chatForm.addEventListener('submit', (e) => {
         e.preventDefault();
         sendChatMessage(itemId, isList);
       });
       
+      btnCloseChat.addEventListener('click', closeModal)
+
       // Enfocar input
       document.getElementById(inputModal).focus();
       
@@ -136,14 +143,25 @@ async function loadChatMessages(itemId, isList = false) {
           
           const messageElement = document.createElement('div');
           messageElement.className = `chat-message ${isOwnMessage ? 'chat-message-own' : 'chat-message-other'}`;
+          messageElement.setAttribute("messageId", message.id); 
           messageElement.innerHTML = `
             <div class="chat-bubble">
               ${!isOwnMessage ? `<span class="chat-sender">${message.sender.alias}</span>` : ''}
               <p>${message.content}</p>
-              <span class="chat-time">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <div class="flex justify-between items-center mt-2">
+                <span class="chat-time">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <button class="delete-message text-sm/8 ms-2 text-red-600 cursor-pointer">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
             </div>
           `;
-          
+
+          messageElement.querySelector('.delete-message').addEventListener('click', () => {
+            console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement)
+            console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
+          });
+
           chatContainer.appendChild(messageElement);
         });
         
@@ -167,7 +185,9 @@ async function loadChatMessages(itemId, isList = false) {
 async function sendChatMessage(itemId, isList = false) {
 
   let inputElement
-  if (!isList){
+  const tipusXat = document.getElementById('tipusXat').value;
+  
+  if (tipusXat === 'item'){
     inputElement = document.getElementById(`chat-input-${itemId}`);
   }else{
     inputElement = document.getElementById(`chat-input-list`);
@@ -182,7 +202,7 @@ async function sendChatMessage(itemId, isList = false) {
     inputElement.disabled = true;
     
     // Enviar mensaje
-    await sendMessage(itemId, content, isList);
+    await sendMessage(itemId, content, (tipusXat === 'list'));
     
     // Limpiar input
     inputElement.value = '';

@@ -38,6 +38,7 @@ export async function sendMessage(itemId, content, isList = false) {
   try {
     const response = !isList  ? await makeApiRequest(`/api/messages/item/${itemId}`, 'POST', { content })
                               : await makeApiRequest(`/api/messages/list/${itemId}`, 'POST', { content })
+    console.log("🚀 ~ sendMessage ~ response:", response)
     return response.data;
   } catch (error) {
     console.error(`Error al enviar mensaje ${!isList ? 'al ítem' : 'a la llista'}:`, error);
@@ -51,6 +52,7 @@ export async function sendMessage(itemId, content, isList = false) {
  * @returns {Promise<Object>} - Promesa con el resultado
  */
 export async function markMessagesAsRead(itemId, isList = false) {
+  console.log("🚀 ~ markMessagesAsRead ~ itemId:", itemId)
   try {
     const response = !isList  ? await makeApiRequest(`/api/messages/read/item/${itemId}`, 'PUT') 
                               : await makeApiRequest(`/api/messages/read/list/${itemId}`, 'PUT')
@@ -114,6 +116,7 @@ export async function getUnreadMessageCounts(listId, isList = false) {
  * @param {Object} data - Datos del mensaje
  */
 export function handleNewMessage(data, isList = false) {
+  console.log("🚀 ~ handleNewMessage ~ data:", data)
   const { itemId, message } = data;
   
   // Incrementar contador si no es nuestro propio mensaje

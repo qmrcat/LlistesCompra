@@ -42,11 +42,12 @@ function openChatList(listId) {
 }
 
 chatButtonList.addEventListener('click', () => {
+  console.log("🚀 ~ chatButtonList.addEventListener ~ currentListId:", currentListId)
   openChatList(currentListId);
 });
 
 // Suscribirse a actualizaciones de contador de mensajes no leídos
-import('../utils/messageService.js').then(messageService => {
+import('./utils/messageService.js').then(messageService => {
   const unsubscribe = messageService.subscribeToUnreadCount(currentListId, (count) => {
     if (count > 0) {
       messageBadgeList.textContent = count > 9 ? '9+' : count;

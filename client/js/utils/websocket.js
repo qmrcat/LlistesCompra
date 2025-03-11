@@ -27,6 +27,43 @@ export function setupWebSocket() {
       token
     }
   });
+
+  //   // Guardar els tipus d'esdeveniments registrats
+  //   const registeredEvents = new Set();
+  
+  //   // Afegir un listener per a tots els esdeveniments
+  //   socket.onAny((eventName, ...args) => {
+  //     if (!registeredEvents.has(eventName)) {
+  //       console.warn(`Esdeveniment no registrat rebut: ${eventName}`, args[0]);
+  //       // Pots afegir aquí la lògica per gestionar esdeveniments desconeguts
+  //     }
+  //   });
+
+  // // Capturar el typus de missatge
+  //   // Guardar la referència original al mètode 'on' de socket.io
+  //   const originalOn = socket.on;
+  
+  //   // Sobreescriure el mètode 'on' per interceptar tots els tipus d'esdeveniments
+  //   socket.on = function(eventName, callback) {
+  //     // Interceptar l'esdeveniment original i afegir el nostre propi processament
+  //     return originalOn.call(this, eventName, function(...args) {
+  //       // Registrar o processar el tipus d'esdeveniment abans de la gestió
+  //       console.log(`Tipus d'esdeveniment rebut: ${eventName}`);
+        
+  //       // Aquí pots afegir qualsevol lògica per processar el tipus d'esdeveniment
+  //       if (eventName === 'item:added' || eventName === 'user:joined' || eventName === 'invitation:rejected') {
+  //         // Fes alguna cosa específica amb aquests tipus d'esdeveniments
+  //         console.log(`Esdeveniment important detectat: ${eventName}`, args[0]);
+  //         // Pots emmagatzemar-lo, processar-lo o fer qualsevol altra acció
+  //       }
+        
+  //       // Cridar al callback original amb els arguments originals
+  //       callback.apply(this, args);
+  //     });
+  //   };
+
+
+
   
   // Eventos del socket
   socket.on('connect', handleSocketConnect);
@@ -55,7 +92,6 @@ export function setupWebSocket() {
   // Eventos de mensajes de chat de llista
   socket.on('message-list:new', handleNewMessageList);
   socket.on('message-list:read', handleMessagesReadList);
-
 }
 
 /**
@@ -445,20 +481,21 @@ function handleInvitationRejected(data) {
  * Manejador para nuevos mensajes de chat
  */
 function handleNewMessage(data) {
-  console.log('WebSocket: Nuevo mensaje recibido', data);
+  console.log('WebSocket: (Item) Nuevo mensaje recibido', data);
   
   // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
   import('./messageService.js').then(messageService => {
-    messageService.handleNewMessage(data);
+    messageService.handleNewMessage(data, false);
   });
   
   // Si el modal de chat está abierto para este ítem, actualizar la conversación
-  const chatModal = document.getElementById(`chat-modal-${data.itemId}`);
+  // const chatModal = document.getElementById(`chat-modal-${data.itemId}`);
+  const chatModal = document.getElementById(`chat-modal-${data.message.itemId}`);
   if (chatModal) {
     const chatContainer = chatModal.querySelector('.chat-messages');
     if (chatContainer) {
       // Actualizar el chat dinámicamente
-      updateChatWithNewMessage(chatContainer, data.message);
+      updateChatWithNewMessage(chatContainer, data.message, false);
     }
   }
 }
@@ -467,7 +504,7 @@ function handleNewMessage(data) {
  * Manejador para nuevos mensajes de chat per a les llites
  */
 function handleNewMessageList(data) {
-  console.log('WebSocket: Nuevo mensaje recibido', data);
+  console.log('WebSocket (List): Nuevo mensaje recibido', data);
   
   // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
   import('./messageService.js').then(messageService => {
@@ -475,7 +512,7 @@ function handleNewMessageList(data) {
   });
   
   // Si el modal de chat está abierto para este ítem, actualizar la conversación
-  const chatModal = document.getElementById(`chat-modal-list-${data.listId}`);
+  const chatModal = document.getElementById(`chat-modal-list`);
   if (chatModal) {
     const chatContainer = chatModal.querySelector('.chat-messages');
     if (chatContainer) {
@@ -516,11 +553,13 @@ function handleMessagesReadList(data) {
  * @param {Object} message - Datos del mensaje
  */
 function updateChatWithNewMessage(chatContainer, message, isList = false) {
+  console.log("🚀 ~ updateChatWithNewMessage ~ message:", message)
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const isOwnMessage = currentUser && message.sender.id === currentUser.id;
   
   const messageElement = document.createElement('div');
   messageElement.className = `chat-message ${isOwnMessage ? 'chat-message-own' : 'chat-message-other'} fade-in`;
+  messageElement.setAttribute("messageId", message.id); 
   messageElement.innerHTML = `
     <div class="chat-bubble">
       ${!isOwnMessage ? `<span class="chat-sender">${message.sender.alias}</span>` : ''}
@@ -537,7 +576,7 @@ function updateChatWithNewMessage(chatContainer, message, isList = false) {
   // Si no es un mensaje propio, marcar como leído
   if (!isOwnMessage) {
     import('./messageService.js').then(messageService => {
-      messageService.markMessagesAsRead(message.itemId, isList).catch(console.error);
+      messageService.markMessagesAsRead((!isList ? message.itemId : message.listId), isList).catch(console.error);
     });
   }
 }

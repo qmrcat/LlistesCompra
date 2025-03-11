@@ -30,7 +30,7 @@ export function setupUIComponents() {
   }
   
   // Mostrar modal
-  export function showModal(content, setupCallback) {
+  export function showModal(content, setupCallback, isList = false) {
     const modalContainer = document.getElementById('modal-container');
     if (modalContainer) {
       modalContainer.innerHTML = `
