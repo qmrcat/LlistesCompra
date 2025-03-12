@@ -238,10 +238,5 @@ Les contribucions són benvingudes! Si vols contribuir:
 
 Aquest projecte està llicenciat sota la llicència MIT - veure l'arxiu [LICENSE](LICENSE.md) per a més detalls.
 
-## 📞 Contacte
-
-Per a qualsevol dubte o suggeriment, pots contactar amb [el teu nom] a [el teu correu electrònic].
 
 ---
-
-Desenvolupat amb ❤️ per [el teu nom]
