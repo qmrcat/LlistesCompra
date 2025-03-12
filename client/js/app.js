@@ -42,7 +42,6 @@ function openChatList(listId) {
 }
 
 chatButtonList.addEventListener('click', () => {
-  console.log("🚀 ~ chatButtonList.addEventListener ~ currentListId:", currentListId)
   openChatList(currentListId);
 });
 
@@ -722,7 +721,6 @@ async function confirmRejectInvitation(token) {
 // Abrir detalle de lista
 export function openListDetail(listId) {
   currentListId = listId;
-  console.log("🚀 ~ openListDetail ~ currentListId:", currentListId)
   
   // Ocultar lista de listas y mostrar detalle
   listsContainer.classList.add('hidden');

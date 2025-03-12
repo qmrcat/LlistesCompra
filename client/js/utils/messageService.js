@@ -52,7 +52,6 @@ export async function sendMessage(itemId, content, isList = false) {
  * @returns {Promise<Object>} - Promesa con el resultado
  */
 export async function markMessagesAsRead(itemId, isList = false) {
-  console.log("🚀 ~ markMessagesAsRead ~ itemId:", itemId)
   try {
     const response = !isList  ? await makeApiRequest(`/api/messages/read/item/${itemId}`, 'PUT') 
                               : await makeApiRequest(`/api/messages/read/list/${itemId}`, 'PUT')

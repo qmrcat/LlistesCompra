@@ -205,8 +205,6 @@ async fetchListDetail(listId) {
   
   // Obtener una lista por su ID
   getListById(listId) {
-    console.log("🚀 ~ ListManager ~ getListById ~ this.lists:", this.lists)
-    
     return this.lists.find(list => list.id === parseInt(listId));
   }
   

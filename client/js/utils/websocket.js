@@ -88,10 +88,12 @@ export function setupWebSocket() {
   // Eventos de mensajes de chat
   socket.on('message:new', handleNewMessage);
   socket.on('message:read', handleMessagesRead);
+  socket.on('message:deleted', handleMessagesRead);
 
   // Eventos de mensajes de chat de llista
   socket.on('message-list:new', handleNewMessageList);
   socket.on('message-list:read', handleMessagesReadList);
+  socket.on('message-list:deleted', handleMessagesReadList);
 }
 
 /**
@@ -588,6 +590,5 @@ function updateChatWithNewMessage(chatContainer, message, isList = false) {
  */
 function getCurrentListId() {
   // return window.currentListId || null;
-  console.log("🚀 ~ websocket getCurrentListId ~ currentListId:", currentListId)
   return currentListId || null;
 }

@@ -56,6 +56,23 @@ const notifyItemDeleted = (listId, itemId) => {
 };
 
 /**
+ * Notifica que se ha eliminado un ítem de una lista
+ * @param {number} listId - ID de la lista associada al mensaje eliminado
+ * @param {number} itemId - ID del ítem associado al mensaje eliminado
+ * @param {number} messageId - ID del message eliminado
+ * @param {number} userId - sI es null se elimina el mensaje de todos los usuarios, si no solo del usuario
+ * @param {number} isList - Si es un caht de lista o de ítem
+ */
+const notifyMessageDeleted = (listId, itemId, messageId, userId, isList = false) => {
+  notifyListMembers(listId, isList ? 'message:deleted' : 'message-list:deleted', {
+    listId,
+    itemId: isList ? null : itemId,
+    userId,
+    messageId
+  });
+};
+
+/**
  * Notifica que se ha actualizado una lista
  * @param {number} listId - ID de la lista
  * @param {object} list - Datos de la lista actualizada
@@ -238,4 +255,5 @@ module.exports = {
   notifyInvitationRejected,
   notifyNewMessage,
   notifyMessagesRead,
+  notifyMessageDeleted,
 };

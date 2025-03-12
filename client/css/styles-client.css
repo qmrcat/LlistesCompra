@@ -88,6 +88,15 @@ html, body {
   }
 
 
+  .borderTopRightRadius{
+    border-top-right-radius: 0;
+  }
+
+  .borderTopLeftRadius{
+    border-top-left-radius: 0;
+  }
+  border-top-left-radius: 0;
+
   /* Ajustes específicos para móviles */
 @media (max-width: 640px) {
     .container {

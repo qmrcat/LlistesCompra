@@ -383,16 +383,13 @@ const getUnreadMessageCount = async (req, res) => {
 const markMessagesAsRead = async (req, res) => {
   try {
     const fullPath = req.originalUrl; 
-    console.log("🚀 ~ markMessagesAsRead ~ fullPath:", fullPath)
     const basePath = req.baseUrl + req.path;
     // Comprovar si la ruta conté '/list'
     const isList = fullPath.includes('/list/');
-    console.log("🚀 ~ markMessagesAsRead ~ isList:", isList)
-
-    let itemId, listId
-
-    console.log("🚀 ~ markMessagesAsRead ~ req.params:", req.params)
     
+    
+    let itemId, listId
+        
     if(!isList) itemId = req.params.itemId;
           else  listId = req.params.listId;
 
@@ -485,9 +482,107 @@ const markMessagesAsRead = async (req, res) => {
   }
 };
 
+
+// Eliminar un ítem
+const deleteMessage = async (req, res) => {
+  try {
+
+    const fullPath = req.originalUrl; 
+    const basePath = req.baseUrl + req.path;
+    // Comprovar si la ruta conté '/list'
+    const isAll = fullPath.includes('/all/');
+    const isList = fullPath.includes('/list/');
+
+    const { messageId, listId, itemId } = req.params;
+    const userId = req.user.id;
+
+    // Encontrar el ítem
+    const message = await Message.findByPk(messageId);
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: 'Message no encontrado'
+      });
+    }
+
+    // Verificar si el usuario tiene acceso a la lista
+    const userList = await ListUser.findOne({
+      where: { 
+        userId, 
+        listId: listId,
+        role: {
+          [Op.in]: ['owner', 'editor']
+        }
+      }
+    });
+    
+
+    if (!userList) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permiso para eliminar el mensaje de esta lista'
+      });
+    }
+
+    // Eliminar el mensaje
+    await message.destroy();
+
+    if(isAll) {
+      // Notificar a todos los usuarios de la lista vía WebSocket
+      //websocketService.notifyMessageDeleted(listId, messageId);
+      websocketService.notifyMessageDeleted = (listId, itemId, messageId, null, isList)
+    } else {
+      websocketService.notifyMessageDeleted = (listId, itemId, messageId, userId, isList)
+    }
+
+
+    
+    // // Verificar que el usuario sea el propietario de la lista o quien agregó el ítem
+    // const isOwner = userList.role === 'owner';
+    // const isCreator = item.addedBy === userId;
+
+    // if (!isOwner && !isCreator) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Solo el propietario de la lista o quien creó el ítem puede eliminarlo'
+    //   });
+    // }
+
+
+    // Guardar el listId antes de eliminar el ítem
+    // const listId = item.listId;
+    // const itemIdList = item.id;
+
+    // Notificar a todos los usuarios de la lista vía WebSocket
+    const websocketService = require('../services/websocketService');
+    websocketService.notifyItemDeleted(listId, itemId);
+
+    // Eliminar el ítem
+    await item.destroy();
+
+    // Notificar a todos los usuarios de la lista vía WebSocket
+    emitToList(listId, 'item:deleted', {
+      listId,
+      itemIdList
+    });
+
+    res.json({
+      success: true,
+      message: 'Ítem eliminado correctamente'
+    });
+  } catch (error) {
+    console.error('Error al eliminar ítem:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al eliminar ítem'
+    });
+  }
+};
+
 module.exports = {
   sendMessage,
   getItemMessages,
   getUnreadMessageCount,
-  markMessagesAsRead
+  markMessagesAsRead,
+  deleteMessage
 };

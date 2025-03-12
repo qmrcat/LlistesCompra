@@ -22,8 +22,7 @@ export class ItemManager {
       
       // Guardar ítems y renderizar
       this.items = response.list.items || [];
-      console.log("🚀 ~ ItemManager ~ loadItems ~ this.items :", this.items )
-      
+            
       this.viewController.renderItems(this.items);
 
       // Cargar contadores de mensajes no leídos
@@ -209,21 +208,15 @@ export class ItemManager {
   // Comprobar si el usuario puede editar el ítem (es propietario de la lista o creador del ítem)
   canUserEditItem(item) {
     
-    console.log("🚀 ~ ItemManager ~ canUserEditItem ~ item:", item)
     const currentUser = getLoggedUser();
     if (!currentUser || !item) return false;
     
     // Verificar si es el creador del ítem
     const isCreator = this.isCurrentUserCreator(item);
-    console.log("🚀 ~ ItemManager ~ canUserEditItem ~ isCreator:", isCreator)
     
     // Verificar si es propietario de la lista
     const list = window.listManager?.getListById(this.listId);
-    console.log("🚀 ~ ItemManager ~ canUserEditItem ~ list:", list)
     const isOwner = list && list.userRole === 'owner';
-    console.log("🚀 ~ ItemManager ~ canUserEditItem ~ isOwner:", isOwner)
-
-    
     
     return isCreator || isOwner;
   }

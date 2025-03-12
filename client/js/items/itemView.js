@@ -444,7 +444,6 @@ import('../utils/messageService.js').then(messageService => {
 
   if (item.notes){
     const editNotesText = itemElement.querySelector('div.edit-notes-text');
-    console.log("🚀 ~ ItemViewController ~ addItemToView ~ editNotesText:", editNotesText)
     if (editNotesText) {
     editNotesText.addEventListener('click', () => {
       this.showEditNotesModal(item);

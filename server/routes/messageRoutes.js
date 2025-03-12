@@ -11,11 +11,16 @@ router.post('/item/:itemId', messageController.sendMessage); // Envia un missatg
 router.get('/item/:itemId', messageController.getItemMessages); // Obtenir tots els missatges d'un item
 router.get('/unread/list/:listId', messageController.getUnreadMessageCount); // Obtenir el nombre de missatges no llegits
 router.put('/read/item/:itemId', messageController.markMessagesAsRead); // Marcar els missatges com llegits
+router.delete('/:messageId', messageController.deleteMessage);
+router.delete('/all/:messageId', messageController.deleteMessage);
 
 // Rutes per al missatges del Xat de les llistes
 router.post('/list/:listId', messageController.sendMessage); // Envia un missatge
 router.get('/list/:listId', messageController.getItemMessages); // Obtenir tots els missatges d'una llista
 router.get('/unread-list/:listId', messageController.getUnreadMessageCount); // Obtenir el nombre de missatges no llegits d'una llista
 router.put('/read/list/:listId', messageController.markMessagesAsRead); // Marcar els missatges com llegits d'una llista
+
+router.delete('/list/:messageId', messageController.deleteMessage);
+router.delete('/list/all/:messageId', messageController.deleteMessage);
 
 module.exports = router;
