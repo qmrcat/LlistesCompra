@@ -1,6 +1,6 @@
 // Componente para gestionar el chat de un ítem
 import { showModal, closeModal } from '../app.js';
-import { sendMessage, getItemMessages, markMessagesAsRead } from '../utils/messageService.js';
+import { sendMessage, getItemMessages, markMessagesAsRead, deleteMessageIndividual } from '../utils/messageService.js';
 import { showNotification } from './notification.js';
 import { getLoggedUser } from '../auth/auth.js';
 
@@ -111,13 +111,14 @@ export function openChatModal(item, isList = false) {
  * @param {number} itemId - ID del ítem
  */
 async function loadChatMessages(itemId, isList = false) {
+
   try {
     const messages = await getItemMessages(itemId, isList);
     let chatContainer;
 
     if (!isList){
         chatContainer = document.querySelector(`#chat-modal-${itemId} .chat-messages`);
-    }else{
+    } else {
         chatContainer = document.querySelector(`#chat-modal-list .chat-messages`);
     }
     
@@ -126,6 +127,7 @@ async function loadChatMessages(itemId, isList = false) {
       chatContainer.innerHTML = '';
       
       const currentUser = getLoggedUser();
+      console.log("🚀 ~ currentUser:", currentUser)
       
       if (messages.length === 0) {
         chatContainer.innerHTML = `
@@ -139,6 +141,12 @@ async function loadChatMessages(itemId, isList = false) {
         // Renderizar mensajes
         messages.forEach(message => {
 
+          let typeMessage = 'normal';
+          if (message.deleteBy.includes(currentUser.id)){
+            typeMessage = 'delete';
+          }
+          
+
           const isOwnMessage = currentUser && message.sender.id === currentUser.id;
           const positionMenu = isOwnMessage ? 'right' : 'left';
           const positionBorderRadius = isOwnMessage ? 'borderTopRightRadius' : 'borderTopLeftRadius';
@@ -151,107 +159,128 @@ async function loadChatMessages(itemId, isList = false) {
           // .borderTopLeftRadius{
 
           // Preparar menú de opciones
-          let menuHtml = `
-            <div class="dropdown relative ms-4">
-              <button class="message-menu w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
-                <i class="fas fa-ellipsis-v"></i>
-              </button>
-              <div class="dropdown-menu-message hidden absolute ${positionMenu}-0 w-64 bg-zinc-100 rounded-md shadow-lg z-10 ${positionBorderRadius}">
-                <button class="delete-message block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-zinc-300">
-                  <i class="fas fa-trash-alt mr-2"></i>Eliminar només per a mi 
+          let menuHtml = '';
+          if(typeMessage !== 'delete'){
+            menuHtml = `
+              <div class="dropdown relative ms-4">
+                <button class="message-menu w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100">
+                  <i class="fas fa-ellipsis-v"></i>
                 </button>
-            `
-          menuHtml += isOwnMessage ? `
-                <button class="delete-message-tothom block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-zinc-300">
-                  <i class="fas fa-trash-alt mr-2"></i>Eliminar per a tothom 
-                </button>
-            ` : '';
-          menuHtml += `
-                <button class="delete-message-cancel block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-zinc-300">
-                  Cancelar
-                </button>
+                <div class="dropdown-menu-message hidden absolute ${positionMenu}-0 w-64 bg-zinc-100 rounded-md shadow-lg z-10 ${positionBorderRadius}">
+                  <button class="delete-message block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-zinc-300">
+                    <i class="fas fa-trash-alt mr-2"></i>Eliminar només per a mi 
+                  </button>
+              `
+            menuHtml += isOwnMessage ? `
+                  <button class="delete-message-tothom block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-zinc-300">
+                    <i class="fas fa-trash-alt mr-2"></i>Eliminar per a tothom 
+                  </button>
+              ` : '';
+            menuHtml += `
+                  <button class="delete-message-cancel block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-zinc-300">
+                    Cancelar
+                  </button>
+                </div>
               </div>
-            </div>
-          `;
-
-  // <button class="delete-message text-sm/8 ms-2 text-red-600 cursor-pointer">
-  //   <i class="fas fa-trash-alt"></i>
-  // </button>
-  // ${isOwnMessage ? menuHtml : ''}
+            `;
+          }
 
           const messageElement = document.createElement('div');
-          messageElement.className = `chat-message ${isOwnMessage ? 'chat-message-own' : 'chat-message-other'}`;
-          messageElement.setAttribute("messageId", message.id); 
-          messageElement.innerHTML = `
-            <div class="chat-bubble">
-              ${!isOwnMessage ? `<span class="chat-sender">${message.sender.alias}</span>` : ''}
-              <p>${message.content}</p>
-              <div class="flex justify-between items-center mt-2">
-                <span class="chat-time">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                ${menuHtml}
-              </div>
-            </div>
-          `;
 
-          // messageElement.querySelector('.message-menu').addEventListener('click', () => {
-          //   console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement)
-          //   console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
-          // });
+          if(typeMessage !== 'delete'){
+              messageElement.className = `chat-message ${isOwnMessage ? 'chat-message-own' : 'chat-message-other'}`;
 
-              // Menú desplegable
-          const menuBtnMessage = messageElement.querySelector('.message-menu');
-          const dropdownMenuMessage = messageElement.querySelector('.dropdown-menu-message');
+              messageElement.setAttribute("messageId", message.id); 
+              messageElement.innerHTML = `
+                <div class="chat-bubble">
+                  ${!isOwnMessage ? `<span class="chat-sender">${message.sender.alias}</span>` : ''}
+                  <p>${message.content}</p>
+                  <div class="flex justify-between items-center mt-2">
+                    <span class="chat-time">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    ${menuHtml}
+                  </div>
+                </div>
+              `;
 
-          menuBtnMessage.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownMenuMessage.classList.toggle('hidden');
-            
-            // Cerrar al hacer clic fuera
-            const closeDropdownMessage = () => {
-              dropdownMenuMessage.classList.add('hidden');
-              document.removeEventListener('click', closeDropdownMessage);
-            };
-            
-            // Añadir listener con pequeño delay para evitar que se cierre inmediatamente
-            setTimeout(() => {
-              document.addEventListener('click', closeDropdownMessage);
-            }, 0);
+              // messageElement.querySelector('.message-menu').addEventListener('click', () => {
+              //   console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement)
+              //   console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
+              // });
+
+                  // Menú desplegable
+              const menuBtnMessage = messageElement.querySelector('.message-menu');
+              const dropdownMenuMessage = messageElement.querySelector('.dropdown-menu-message');
+
+              menuBtnMessage.addEventListener('click', (e) => {
+                e.stopPropagation();
+                dropdownMenuMessage.classList.toggle('hidden');
+                
+                // Cerrar al hacer clic fuera
+                const closeDropdownMessage = () => {
+                  dropdownMenuMessage.classList.add('hidden');
+                  document.removeEventListener('click', closeDropdownMessage);
+                };
+                
+                // Añadir listener con pequeño delay para evitar que se cierre inmediatamente
+                setTimeout(() => {
+                  document.addEventListener('click', closeDropdownMessage);
+                }, 0);
+              });
+
+              // Botón de eliminar ítem
+              const deleteMessageBtn = messageElement.querySelector('.delete-message');
+              if (deleteMessageBtn) {
+                deleteMessageBtn.addEventListener('click', async () => {
+                  //this.showDeleteConfirmationModal(item);
+                  console.log("🚀 ~ loadChatMessages ~ deleteMessageBtn", deleteMessageBtn)
+                  console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
+                  try {
+                    // await this.itemManager.deleteItem(item.id);
+                    await deleteMessageIndividual(messageElement.getAttribute("messageId"))
+                    showNotification('Missatge eliminat correctament', 'success');
+                  } catch (error) {
+                    // El error ya se maneja en itemManager
+                  }
+                });
+              }
+
+              const deleteMessageTothomBtn = messageElement.querySelector('.delete-message-tothom');
+              if (deleteMessageTothomBtn) {
+                deleteMessageTothomBtn.addEventListener('click', () => {
+                  //this.showDeleteConfirmationModal(item);
+                  console.log("🚀 ~ loadChatMessages ~ deleteMessageTothomBtn", deleteMessageTothomBtn)
+                  console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
+                });
+              }
+            } else {
+              messageElement.className = `chat-message ${isOwnMessage ? 'chat-message-own' : 'chat-message-other'}`;
+
+              messageElement.innerHTML = `
+                <div class="chat-bubble-delete">
+                  <p>Missatge eliminat </p>
+                </div>
+              `;
+            }
+            chatContainer.appendChild(messageElement);
           });
-
-          // Botón de eliminar ítem
-          const deleteMessageBtn = messageElement.querySelector('.delete-message');
-          if (deleteMessageBtn) {
-            deleteMessageBtn.addEventListener('click', () => {
-              //this.showDeleteConfirmationModal(item);
-              console.log("🚀 ~ loadChatMessages ~ deleteMessageBtn", deleteMessageBtn)
-              console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
-            });
-          }
-
-          const deleteMessageTothomBtn = messageElement.querySelector('.delete-message-tothom');
-          if (deleteMessageTothomBtn) {
-            deleteMessageTothomBtn.addEventListener('click', () => {
-              //this.showDeleteConfirmationModal(item);
-              console.log("🚀 ~ loadChatMessages ~ deleteMessageTothomBtn", deleteMessageTothomBtn)
-              console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
-            });
-          }
-
-          chatContainer.appendChild(messageElement);
-        });
-        
+        }
+      
         // Scroll al final
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
       
       // Marcar mensajes como leídos
       await markMessagesAsRead(itemId, isList);
-    }
+        
   } catch (error) {
     console.error(`Error al cargar mensajes para el ítem ${itemId}:`, error);
     throw error;
   }
 }
+
+
+
+
 
 /**
  * Envía un mensaje en el chat

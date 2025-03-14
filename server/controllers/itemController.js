@@ -285,8 +285,83 @@ const deleteItem = async (req, res) => {
   }
 };
 
+
+// FUNCIONS INTERNES
+
+/**
+ * Funció interna per llegir un ítem per ID
+ * @param {string} itemId - ID de l'ítem a llegir
+ * @param {object} userId - ID de l'usuari que fa la petició
+ * @returns {Promise<object>} - Informació completa de l'ítem o error
+ */
+const getItemById = async (itemId) => {
+  try {
+    // Trobar l'ítem
+    const item = await Item.findByPk(itemId);
+    if (!item) {
+      return {
+        success: false,
+        status: 404,
+        message: 'Ítem no trobat'
+      };
+    }
+
+    // // Verificar si l'usuari té accés a la llista
+    // const userList = await ListUser.findOne({
+    //   where: {
+    //     userId,
+    //     listId: item.listId
+    //   }
+    // });
+
+    // if (!userList) {
+    //   return {
+    //     success: false,
+    //     status: 403,
+    //     message: 'No tens permís per accedir a aquest ítem'
+    //   };
+    // }
+
+    // // Obtenir informació de l'usuari que va afegir l'ítem
+    // const creator = await User.findByPk(item.addedBy, {
+    //   attributes: ['id', 'alias']
+    // });
+
+    // Preparar resposta amb dades completes
+    const itemResponse = {
+      id: item.id,
+      name: item.name,
+      quantity: item.quantity,
+      completed: item.completed,
+      notes: item.notes,
+      listId: item.listId,
+      addedBy: {
+        id: creator.id,
+        alias: creator.alias
+      },
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      typesUnits: item.typesUnits
+    };
+
+    return {
+      success: true,
+      item: itemResponse
+    };
+  } catch (error) {
+    console.error('Error al llegir ítem:', error);
+    return {
+      success: false,
+      status: 500,
+      message: 'Error al llegir ítem'
+    };
+  }
+};
+
+
 module.exports = {
   addItem,
   updateItem,
-  deleteItem
+  deleteItem,
+  getItemById
 };

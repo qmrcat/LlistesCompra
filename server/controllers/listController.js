@@ -723,6 +723,117 @@ const rejectInvitation = async (req, res) => {
   }
 };
 
+///////////////////////////////////////////
+// FUNCIONS INTERNES
+
+/**
+ * Obté els detalls d'una llista pel seu ID
+ * @param {string} listId - ID de la llista a obtenir
+ * @param {string} [section='all'] - Secció específica a retornar ('participants', 'items', 'pending', 'all')
+ * @returns {Promise<Object>} - Objecte formatat amb la informació de la llista o secció sol·licitada
+ */
+const getListById = async (listId, section = 'all') => {
+  // Obtenir detalls de la llista
+  const list = await List.findByPk(listId, {
+    include: [
+      {
+        model: User,
+        attributes: ['id', 'alias'],
+        through: { attributes: ['role'] }
+      },
+      {
+        model: Item,
+        include: [{
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'alias']
+        }]
+      },
+      {
+        model: Invitation,
+        where: {
+          accepted: false,
+          expiresAt: {
+            [Op.gt]: new Date()
+          }
+        },
+        required: false,
+        include: [
+          {
+            model: User,
+            as: 'inviter',
+            attributes: ['id', 'alias']
+          }
+        ]
+      }
+    ]
+  });
+  
+  if (!list) {
+    throw new Error('Llista no trobada');
+  }
+  
+  // Preparar les dades de cada secció
+  const participants = list.Users.map(user => ({
+    id: user.id,
+    alias: user.alias,
+    role: user.ListUser.role
+  }));
+
+  const items = list.Items.map(item => ({
+    id: item.id,
+    name: item.name,
+    quantity: item.quantity,
+    completed: item.completed,
+    notes: item.notes,
+    addedBy: {
+      id: item.creator.id,
+      alias: item.creator.alias
+    },
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    typesUnits: item.typesUnits
+  }));
+
+  const pendingInvitations = list.Invitations ? list.Invitations.map(invitation => ({
+    id: invitation.id,
+    email: invitation.email,
+    token: invitation.token,
+    expiresAt: invitation.expiresAt,
+    invitedBy: invitation.inviter ? {
+      id: invitation.inviter.id,
+      alias: invitation.inviter.alias
+    } : null,
+    createdAt: invitation.createdAt
+  })) : [];
+
+  // Retornar només la secció sol·licitada o totes les dades
+  switch (section) {
+    case 'participants':
+      return participants;
+    case 'items':
+      return items;
+    case 'pending':
+      return pendingInvitations;
+    case 'all':
+    default:
+      // Formatear resposta amb totes les dades
+      const formattedList = {
+        id: list.id,
+        name: list.name,
+        createdBy: list.createdBy,
+        createdAt: list.createdAt,
+        participants,
+        items,
+        pendingInvitations,
+        participantCount: participants.length
+      };
+      
+      return formattedList;
+  }
+};
+
+// Exportar funcions del controlador
 module.exports = {
   createList,
   getUserLists,
@@ -733,5 +844,6 @@ module.exports = {
   cancelInvitation,
   resendInvitation,
   leaveList,
-  rejectInvitation
+  rejectInvitation,
+  getListById
 };

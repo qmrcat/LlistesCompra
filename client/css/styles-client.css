@@ -95,7 +95,7 @@ html, body {
   .borderTopLeftRadius{
     border-top-left-radius: 0;
   }
-  border-top-left-radius: 0;
+  
 
   /* Ajustes específicos para móviles */
 @media (max-width: 640px) {
@@ -176,6 +176,15 @@ html, body {
 .chat-message-other .chat-bubble {
   background-color: white;
   border-top-left-radius: 0;
+}
+
+.chat-bubble-delete {
+  max-width: 80%;
+  padding: 10px 12px;
+  /* border-radius: 8px; */
+  position: relative;
+  word-wrap: break-word;
+  background-color: gray;
 }
 
 .chat-sender {

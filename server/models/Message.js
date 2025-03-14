@@ -7,10 +7,12 @@ const Message = sequelize.define('Message', {
     primaryKey: true,
     autoIncrement: true
   },
+  // Contenido del mensaje
   content: {
     type: DataTypes.TEXT,
     allowNull: false
   },
+  // id de la llista a la que pertenece el mensaje
   listId: {
     type: DataTypes.INTEGER,
     allowNull: true
@@ -37,7 +39,7 @@ const Message = sequelize.define('Message', {
       this.setDataValue('readBy', JSON.stringify(value));
     }
   },
-  // Usuarios que han leído el mensaje (array de IDs)
+  // Usuarios que han eliminado el mensaje (array de IDs)
   deleteBy: {
     type: DataTypes.TEXT,
     allowNull: true,
@@ -48,7 +50,12 @@ const Message = sequelize.define('Message', {
     set(value) {
       this.setDataValue('deleteBy', JSON.stringify(value));
     }
-  }
+  },
+  // Respuesta a otro mensaje
+  replyId: {
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
 });
 
 module.exports = Message;

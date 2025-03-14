@@ -210,6 +210,47 @@ function notifyUnreadCountChange(itemId, count, isList = false) {
   }
 }
 
+// Eliminar un missatge individual
+export async function deleteMessageIndividual(messageId) {
+  try {
+    await makeApiRequest(`/api/messages/list/${messageId}`, 'DELETE'); 
+    
+    // Eliminar el ítem del array local
+    // this.items = this.items.filter(item => item.id !== parseInt(itemId));
+    
+    // Actualizar vista
+    removeMessageFromView(messageId);
+    
+    return true;
+  } catch (error) {
+    console.error(`Error al eliminar missatge ${messageId}:`, error);
+    showNotification('Error al eliminar l\'ítem', 'error');
+    throw error;
+  }
+}
+
+ // Eliminar un ítem de la vista
+ export function removeMessageFromView(messageId) {
+  // const messageElement = document.querySelector(`[messageid="${messageId}"]`);
+  const messageElement = document.querySelector(`.chat-message[messageid="${messageId}"]`);
+  if (messageElement) {
+    // // Añadir animación de salida
+    // messageElement.classList.add('opacity-0');
+    // messageElement.style.transition = 'opacity 0.3s ease';
+
+    // // Elimina l'element trobat
+    // messageElement.remove();
+
+    messageElement.innerHTML = `
+      <div class="chat-bubble-delete">
+        <p>Missatge eliminat </p>
+      </div>
+    `;
+    console.log(`Missatge amb ID ${messageId} eliminat amb èxit`);
+    
+  }
+}
+
 /**
  * Obtiene el contador de mensajes no leídos para un ítem específico
  * @param {number} itemId - ID del ítem

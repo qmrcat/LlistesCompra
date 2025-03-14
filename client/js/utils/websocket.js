@@ -88,12 +88,14 @@ export function setupWebSocket() {
   // Eventos de mensajes de chat
   socket.on('message:new', handleNewMessage);
   socket.on('message:read', handleMessagesRead);
-  socket.on('message:deleted', handleMessagesRead);
+  socket.on('message:deleted', handleMessagesDelete);
 
   // Eventos de mensajes de chat de llista
   socket.on('message-list:new', handleNewMessageList);
   socket.on('message-list:read', handleMessagesReadList);
-  socket.on('message-list:deleted', handleMessagesReadList);
+  socket.on('message-list:deleted', handleMessagesDeleteList);
+
+  // 'message:deleted' : 'message-list:deleted'
 }
 
 /**
@@ -324,27 +326,6 @@ function handleItemUpdated(data) {
 }
 
 
-// /**
-//  * Manejador para ítems eliminados
-//  */
-// function handleItemDeleted(data) {
-//   const { listId, itemId } = data;
-//   const currentListId = getCurrentListId();
-  
-//   // Si estamos en la lista donde se eliminó el ítem
-//   if (currentListId === listId && window.itemManager) {
-//     // Obtener información del ítem antes de eliminarlo (para mostrar en notificación)
-//     const item = window.itemManager.getItemById(itemId);
-//     const itemName = item ? item.name : 'un ítem';
-    
-//     window.itemManager.deleteWebSocketItem(itemId);
-    
-//     // Mostrar notificación
-//     showNotification(`S'ha eliminat "${itemName}"`, 'info');
-//   }
-// }
-
-
 /**
  * Manejador para ítems eliminados
  */
@@ -367,8 +348,30 @@ function handleItemDeleted(data) {
   }
 }
 
+// notifyListMembers(listId, isList ? 'message:deleted' : 'message-list:deleted', {
+//   listId,
+//   itemId: isList ? null : itemId,
+//   userId,
+//   messageId
+
+function handleMessagesDelete(data) {
+
+    // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+    import('./messageService.js').then(messageService => {
+      messageService.removeMessageFromView(data.messageId);
+    });
+    
+}
 
 
+function handleMessagesDeleteList(data) {
+
+    // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+    import('./messageService.js').then(messageService => {
+      messageService.removeMessageFromView(data.messageId);
+    });
+
+}
 
 
 /**

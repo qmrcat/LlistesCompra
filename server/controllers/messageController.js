@@ -2,6 +2,8 @@ const { Message, User, Item, List, ListUser } = require('../models');
 const { Op } = require('sequelize');
 const { sequelize } = require('../config/database');
 const websocketService = require('../services/websocketService');
+const { getListById } = require('./listController');
+const { getItemById } = require('./itemController');
 
 // Enviar un nuevo mensaje
 const sendMessage = async (req, res) => {
@@ -485,6 +487,7 @@ const markMessagesAsRead = async (req, res) => {
 
 // Eliminar un ítem
 const deleteMessage = async (req, res) => {
+  
   try {
 
     const fullPath = req.originalUrl; 
@@ -493,8 +496,21 @@ const deleteMessage = async (req, res) => {
     const isAll = fullPath.includes('/all/');
     const isList = fullPath.includes('/list/');
 
-    const { messageId, listId, itemId } = req.params;
+    const { messageId } = req.params;
+    let listId, itemId
+
     const userId = req.user.id;
+
+    if (itemId) {
+        const data = getItemById(message.itemId)
+        if (!data || !data.success) {
+          return res.status(404).json({
+            success: false,
+            message: 'Item no trobat'
+          });
+        }
+        listId = data.item.listId
+    }
 
     // Encontrar el ítem
     const message = await Message.findByPk(messageId);
@@ -504,6 +520,9 @@ const deleteMessage = async (req, res) => {
         message: 'Message no encontrado'
       });
     }
+
+    listId = message.listId
+    itemId = message.itemId
 
     // Verificar si el usuario tiene acceso a la lista
     const userList = await ListUser.findOne({
@@ -523,58 +542,45 @@ const deleteMessage = async (req, res) => {
         message: 'No tienes permiso para eliminar el mensaje de esta lista'
       });
     }
-
-    // Eliminar el mensaje
-    await message.destroy();
-
+ 
+    const websocketService = require('../services/websocketService');
     if(isAll) {
+
+      // Eliminar el mensaje
+      await message.destroy();
+
       // Notificar a todos los usuarios de la lista vía WebSocket
       //websocketService.notifyMessageDeleted(listId, messageId);
-      websocketService.notifyMessageDeleted = (listId, itemId, messageId, null, isList)
+      websocketService.notifyMessageDeleted(listId, itemId, messageId, null, isList)
     } else {
-      websocketService.notifyMessageDeleted = (listId, itemId, messageId, userId, isList)
+
+      let userIdAll = userId
+      const deleteBy = message.deleteBy || [];
+      if (!deleteBy.includes(userId)) {
+        deleteBy.push(userId);
+        await message.update({ deleteBy });
+      }
+      console.log(deleteBy.length);
+      const participants = getListById(listId, 'participants')
+      const participantCount = participants.length
+      if(deleteBy.length === participantCount) {
+        // Eliminar el mensaje
+        await message.destroy();
+        userIdAll = null
+      }
+
+      websocketService.notifyMessageDeleted(listId, itemId, messageId, userIdAll, isList)
     }
-
-
-    
-    // // Verificar que el usuario sea el propietario de la lista o quien agregó el ítem
-    // const isOwner = userList.role === 'owner';
-    // const isCreator = item.addedBy === userId;
-
-    // if (!isOwner && !isCreator) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Solo el propietario de la lista o quien creó el ítem puede eliminarlo'
-    //   });
-    // }
-
-
-    // Guardar el listId antes de eliminar el ítem
-    // const listId = item.listId;
-    // const itemIdList = item.id;
-
-    // Notificar a todos los usuarios de la lista vía WebSocket
-    const websocketService = require('../services/websocketService');
-    websocketService.notifyItemDeleted(listId, itemId);
-
-    // Eliminar el ítem
-    await item.destroy();
-
-    // Notificar a todos los usuarios de la lista vía WebSocket
-    emitToList(listId, 'item:deleted', {
-      listId,
-      itemIdList
-    });
 
     res.json({
       success: true,
-      message: 'Ítem eliminado correctamente'
+      message: 'Missatge eliminat correctament'
     });
   } catch (error) {
-    console.error('Error al eliminar ítem:', error);
+    console.error('Error en eliminar el missatge', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar ítem'
+      message: 'Error al eliminar el missatge'
     });
   }
 };
