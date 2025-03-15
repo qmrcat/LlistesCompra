@@ -322,10 +322,10 @@ const getItemById = async (itemId) => {
     //   };
     // }
 
-    // // Obtenir informació de l'usuari que va afegir l'ítem
-    // const creator = await User.findByPk(item.addedBy, {
-    //   attributes: ['id', 'alias']
-    // });
+    // Obtenir informació de l'usuari que va afegir l'ítem
+    const creator = await User.findByPk(item.addedBy, {
+      attributes: ['id', 'alias']
+    });
 
     // Preparar resposta amb dades completes
     const itemResponse = {

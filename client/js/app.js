@@ -80,7 +80,7 @@ async function checkAuth() {
       // Actualizar UI para usuario autenticado
       userAlias.textContent = user.alias;
       aliasUsuari = user.alias;
-      console.log("🚀 ~ checkAuth ~ aliasUsuari:", aliasUsuari)
+      console.log("Connectat l'usuari:", aliasUsuari)
       userMenu.classList.remove('hidden');
       
       // Inicializar gestores

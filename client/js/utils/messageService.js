@@ -211,15 +211,15 @@ function notifyUnreadCountChange(itemId, count, isList = false) {
 }
 
 // Eliminar un missatge individual
-export async function deleteMessageIndividual(messageId) {
+export async function deleteMessageIndividual(messageId, isList = false) {
   try {
-    await makeApiRequest(`/api/messages/list/${messageId}`, 'DELETE'); 
-    
+    !isList ? await makeApiRequest(`/api/messages/${messageId}`, 'DELETE') 
+            : await makeApiRequest(`/api/messages/list/${messageId}`, 'DELETE')
     // Eliminar el ítem del array local
     // this.items = this.items.filter(item => item.id !== parseInt(itemId));
     
     // Actualizar vista
-    removeMessageFromView(messageId);
+    removeMessageFromView(messageId, true);
     
     return true;
   } catch (error) {
@@ -229,9 +229,28 @@ export async function deleteMessageIndividual(messageId) {
   }
 }
 
- // Eliminar un ítem de la vista
- export function removeMessageFromView(messageId) {
-  // const messageElement = document.querySelector(`[messageid="${messageId}"]`);
+// Eliminar un missatge individual
+export async function deleteMessageAll(messageId, isList = false) {
+  try {
+    !isList ? await makeApiRequest(`/api/messages/all/${messageId}`, 'DELETE') 
+            : await makeApiRequest(`/api/messages/list/all/${messageId}`, 'DELETE')
+    // Eliminar el ítem del array local
+    // this.items = this.items.filter(item => item.id !== parseInt(itemId));
+    
+    // Actualizar vista
+    removeMessageFromView(messageId, false);
+    
+    return true;
+  } catch (error) {
+    console.error(`Error al eliminar missatge ${messageId}:`, error);
+    showNotification('Error al eliminar l\'ítem', 'error');
+    throw error;
+  }
+}
+
+ // Eliminar un missatge de la vista
+ export function removeMessageFromView(messageId, isIndividual = true) {
+  
   const messageElement = document.querySelector(`.chat-message[messageid="${messageId}"]`);
   if (messageElement) {
     // // Añadir animación de salida
@@ -240,13 +259,24 @@ export async function deleteMessageIndividual(messageId) {
 
     // // Elimina l'element trobat
     // messageElement.remove();
+    if(isIndividual){
+      messageElement.innerHTML = `
+        <div class="chat-bubble-delete">
+          <p>Missatge eliminat </p>
+        </div>
+      `;
+      console.log(`Missatge amb ID ${messageId} eliminat amb èxit`);
 
-    messageElement.innerHTML = `
-      <div class="chat-bubble-delete">
-        <p>Missatge eliminat </p>
-      </div>
-    `;
-    console.log(`Missatge amb ID ${messageId} eliminat amb èxit`);
+    } else {
+      messageElement.remove();
+    }
+
+    // messageElement.innerHTML = `
+    //   <div class="chat-bubble-delete">
+    //     <p>Missatge eliminat </p>
+    //   </div>
+    // `;
+    
     
   }
 }

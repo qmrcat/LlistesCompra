@@ -487,30 +487,23 @@ const markMessagesAsRead = async (req, res) => {
 
 // Eliminar un ítem
 const deleteMessage = async (req, res) => {
-  
+  console.log('soc a delete deleteMessage')
   try {
 
     const fullPath = req.originalUrl; 
+    console.log("🚀 ~ deleteMessage ~ fullPath:", fullPath)
     const basePath = req.baseUrl + req.path;
     // Comprovar si la ruta conté '/list'
     const isAll = fullPath.includes('/all/');
+    console.log("🚀 ~ deleteMessage ~ isAll:", isAll)
     const isList = fullPath.includes('/list/');
+    console.log("🚀 ~ deleteMessage ~ isList:", isList)
 
     const { messageId } = req.params;
+    console.log("🚀 ~ deleteMessage ~ messageId:", messageId)
     let listId, itemId
 
     const userId = req.user.id;
-
-    if (itemId) {
-        const data = getItemById(message.itemId)
-        if (!data || !data.success) {
-          return res.status(404).json({
-            success: false,
-            message: 'Item no trobat'
-          });
-        }
-        listId = data.item.listId
-    }
 
     // Encontrar el ítem
     const message = await Message.findByPk(messageId);
@@ -522,7 +515,24 @@ const deleteMessage = async (req, res) => {
     }
 
     listId = message.listId
+    console.log("🚀 ~ deleteMessage ~ listId:", listId)
     itemId = message.itemId
+    console.log("🚀 ~ deleteMessage ~ itemId:", itemId)
+
+    if (itemId) {
+        const data = await getItemById(itemId)
+        console.log("🚀 ~ deleteMessage ~ data:", data)
+        if (!data || !data.success) {
+          return res.status(404).json({
+            success: false,
+            message: 'Item no trobat'
+          });
+        }
+        listId = data.item.listId
+    }
+      
+    console.log("🚀 ~222 deleteMessage ~ listId:", listId)
+
 
     // Verificar si el usuario tiene acceso a la lista
     const userList = await ListUser.findOne({
@@ -560,10 +570,8 @@ const deleteMessage = async (req, res) => {
         deleteBy.push(userId);
         await message.update({ deleteBy });
       }
-      console.log(deleteBy.length);
-      const participants = getListById(listId, 'participants')
-      const participantCount = participants.length
-      if(deleteBy.length === participantCount) {
+      const participantsCount = await getListById(listId, 'participantsCount')
+      if(Number(deleteBy.length) === Number(participantsCount)) {
         // Eliminar el mensaje
         await message.destroy();
         userIdAll = null

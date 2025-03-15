@@ -729,7 +729,7 @@ const rejectInvitation = async (req, res) => {
 /**
  * Obté els detalls d'una llista pel seu ID
  * @param {string} listId - ID de la llista a obtenir
- * @param {string} [section='all'] - Secció específica a retornar ('participants', 'items', 'pending', 'all')
+ * @param {string} [section='all'] - Secció específica a retornar ('participants', 'items', 'pending', 'participantsCount', 'all')
  * @returns {Promise<Object>} - Objecte formatat amb la informació de la llista o secció sol·licitada
  */
 const getListById = async (listId, section = 'all') => {
@@ -773,12 +773,17 @@ const getListById = async (listId, section = 'all') => {
     throw new Error('Llista no trobada');
   }
   
+ 
   // Preparar les dades de cada secció
   const participants = list.Users.map(user => ({
     id: user.id,
     alias: user.alias,
     role: user.ListUser.role
   }));
+
+  if( section === 'participants') return participants;
+
+  if( section === 'participantsCount')  return Number(participants.length)
 
   const items = list.Items.map(item => ({
     id: item.id,
@@ -794,6 +799,7 @@ const getListById = async (listId, section = 'all') => {
     updatedAt: item.updatedAt,
     typesUnits: item.typesUnits
   }));
+  if( section === 'items') return items;
 
   const pendingInvitations = list.Invitations ? list.Invitations.map(invitation => ({
     id: invitation.id,
@@ -806,6 +812,8 @@ const getListById = async (listId, section = 'all') => {
     } : null,
     createdAt: invitation.createdAt
   })) : [];
+  if( section === 'pendingInvitations') return pendingInvitations;
+  
 
   // Retornar només la secció sol·licitada o totes les dades
   switch (section) {
@@ -815,6 +823,8 @@ const getListById = async (listId, section = 'all') => {
       return items;
     case 'pending':
       return pendingInvitations;
+    case 'participantsCount':
+      return participants.length
     case 'all':
     default:
       // Formatear resposta amb totes les dades

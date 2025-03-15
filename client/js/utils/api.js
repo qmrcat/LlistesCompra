@@ -9,6 +9,7 @@ import { getAuthToken, logout } from '../auth/auth.js';
  * @returns {Promise<any>} - Promesa con la respuesta
  */
 export async function makeApiRequest(endpoint, method = 'GET', data = null) {
+  console.log("🚀 ~ makeApiRequest ~ endpoint:", endpoint)
   try {
     const token = getAuthToken();
     

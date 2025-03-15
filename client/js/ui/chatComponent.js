@@ -1,6 +1,6 @@
 // Componente para gestionar el chat de un ítem
 import { showModal, closeModal } from '../app.js';
-import { sendMessage, getItemMessages, markMessagesAsRead, deleteMessageIndividual } from '../utils/messageService.js';
+import { sendMessage, getItemMessages, markMessagesAsRead, deleteMessageIndividual, deleteMessageAll } from '../utils/messageService.js';
 import { showNotification } from './notification.js';
 import { getLoggedUser } from '../auth/auth.js';
 
@@ -19,6 +19,9 @@ export function openChatModal(item, isList = false) {
         existingModal = document.getElementById(`chat-modal-list`);
     }
     if (existingModal) return;
+
+    const nameInput = document.getElementById('list-name');
+    console.log("🚀 ~ nameInput:", nameInput)
     
     // Mostrar loading mientras se cargan los mensajes
     //<div id="chat-modal-${item.id}" class="bg-white rounded-lg shadow-xl w-full max-w-xl flex flex-col h-[80vh] z-40">
@@ -26,7 +29,8 @@ export function openChatModal(item, isList = false) {
 
     const itemId = !isList ? item.id : item;
     const modalID = !isList ? item.id : 'list';
-    const titolModal = !isList ? `Xat del producte: ${item.name}` : 'Xat de la llista actual'; 
+    const titolModal = !isList  ? `Xat del producte: ${item.name} de la llista ${nameInput.textContent}` 
+                                : `Xat de la llista actual: ${nameInput.textContent}`; 
     const formModal = !isList ? `chat-form-${item.id}` : 'chat-form-list';
     const inputModal = !isList ? `chat-input-${item.id}` : 'chat-input-list'
     const colorFons = !isList ? 'bg-gray-50' : 'bg-lime-100';
@@ -236,7 +240,7 @@ async function loadChatMessages(itemId, isList = false) {
                   console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
                   try {
                     // await this.itemManager.deleteItem(item.id);
-                    await deleteMessageIndividual(messageElement.getAttribute("messageId"))
+                    await deleteMessageIndividual(messageElement.getAttribute("messageId"), isList)
                     showNotification('Missatge eliminat correctament', 'success');
                   } catch (error) {
                     // El error ya se maneja en itemManager
@@ -246,10 +250,17 @@ async function loadChatMessages(itemId, isList = false) {
 
               const deleteMessageTothomBtn = messageElement.querySelector('.delete-message-tothom');
               if (deleteMessageTothomBtn) {
-                deleteMessageTothomBtn.addEventListener('click', () => {
+                deleteMessageTothomBtn.addEventListener('click', async () => {
                   //this.showDeleteConfirmationModal(item);
                   console.log("🚀 ~ loadChatMessages ~ deleteMessageTothomBtn", deleteMessageTothomBtn)
                   console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
+                  try {
+                    // await this.itemManager.deleteItem(item.id);
+                    await deleteMessageAll(messageElement.getAttribute("messageId"), isList)
+                    showNotification('Missatge eliminat correctament per a tothom', 'success');
+                  } catch (error) {
+                    // El error ya se maneja en itemManager
+                  }
                 });
               }
             } else {

@@ -130,47 +130,32 @@ export function leaveListRoom(listId) {
 
 // ===== Manejadores de eventos del socket =====
 
-// /**
-//  * Manejador para evento de conexión
-//  */
-// function handleSocketConnect() {
-//   console.log('WebSocket conectado');
-//   isConnected = true;
-//   reconnectAttempts = 0;
-  
-//   // Unirse a las salas de todas las listas del usuario
-//   const listManager = window.listManager;
-//   if (listManager && listManager.lists) {
-//     const listIds = listManager.lists.map(list => list.id);
-//     joinListRooms(listIds);
-//   }
-// }
-
-
 /**
  * Manejador para evento de conexión
  */
 function handleSocketConnect() {
-  console.log('WebSocket conectado');
+  console.log('WebSocket connectat');
   isConnected = true;
   reconnectAttempts = 0;
   
-  // Unirse a las salas de todas las listas del usuario
+  // Uniu-vos a les sales de totes les llistes de l'usuari
   const listManagerCopy = listManager;
   if (listManagerCopy && listManagerCopy.lists) {
+    
     const listIds = listManagerCopy.lists.map(list => list.id);
-    console.log('Uniéndose a las salas de listas:', listIds);
+    const listName = listManagerCopy.lists.map(list => list.name);
+    console.log('Unint-se a les sales de llistes:', listIds[0], listName[0]);
     joinListRooms(listIds);
   }
   
-  // Unirse a la lista actual si está abierta
+  // Uniu-vos a la llista actual si està oberta
   const currentListId = getCurrentListId();
   if (currentListId) {
-    console.log('Uniéndose a la sala de la lista actual:', currentListId);
+    console.log('Unint-se a la sala de la llista actual:', currentListId);
     joinListRoom(currentListId);
   }
   
-  // Mostrar notificación si se estaba intentando reconectar
+  // Mostrar notificació si s'estava intentant reconnectar
   if (reconnectAttempts > 0) {
     showNotification('Connexió restablerta', 'success');
   }
@@ -179,102 +164,83 @@ function handleSocketConnect() {
 
 
 /**
- * Manejador para evento de desconexión
+ * Manejador per a esdeveniment de desconnexió
  */
 function handleSocketDisconnect(reason) {
-  console.log(`WebSocket desconectado: ${reason}`);
+  console.log(`WebSocket desconnectat: ${reason}`);
   isConnected = false;
   
-  // Intentar reconectar si no fue una desconexión intencional
+  // Intentar reconnectar si no va ser una desconnexió intencional
   if (reason !== 'io client disconnect') {
     attemptReconnect();
   }
 }
 
 /**
- * Manejador para evento de error de conexión
+ * Manejador per esdeveniment d'error de connexió
  */
 function handleSocketError(error) {
   console.error('Error de WebSocket:', error);
   
-  // Si el error es de autenticación, no intentar reconectar
-  if (error.message === 'Autenticación requerida' || error.message === 'Token inválido') {
-    showNotification('Error de autenticación en tiempo real', 'error');
+  // Si l'error és d'autenticació, no intenteu reconnectar
+  if (error.message === 'Autenticació requerida' || error.message === 'Token invalit') {
+    showNotification('Error d\'autenticació en temps real', 'error');
   } else {
     attemptReconnect();
   }
 }
 
 /**
- * Intentar reconectar el WebSocket
+ * Intentar reconnectar el WebSocket
  */
 function attemptReconnect() {
   if (reconnectAttempts < maxReconnectAttempts) {
     reconnectAttempts++;
     
     setTimeout(() => {
-      console.log(`Intentando reconectar WebSocket (intento ${reconnectAttempts})...`);
+      console.log(`Intentant reconnectar WebSocket (intent ${reconnectAttempts})...`);
       socket.connect();
     }, reconnectInterval);
   } else {
-    console.error('No se pudo reconectar WebSocket después de varios intentos');
-    showNotification('Se perdió la conexión en tiempo real. Recarga la página.', 'warning', 10000);
+    console.error('No s\'ha pogut reconnectar WebSocket després de diversos intents');
+    showNotification('S\'ha pardut la connexió a temps real. Recarrega la pàgina.', 'warning', 10000);
   }
 }
 
-// ===== Manejadores de eventos de datos =====
+// ===== Manejadors d'esdeveniments de dades =====
 
 /**
- * Manejador para actualizaciones de listas
+ * Manejador per a actualitzacions de llistes
  */
 function handleListUpdated(data) {
   const { listId, list } = data;
   
-  // Actualizar la lista en el gestor si está disponible
+  // Actualitzar la llista al gestor si està disponible
   if (listManager) {
     listManager.updateListInMemory(listId, list);
     
-    // Actualizar vista si está disponible
+    // Actualitzar vista si està disponible
     if (listViewController) {
       listViewController.updateListCard(list);
     }
   }
 }
 
-// /**
-//  * Manejador para nuevos ítems
-//  */
-// function handleItemAdded(data) {
-//   const { listId, item } = data;
-//   const currentListId = getCurrentListId();
-  
-//   // Si estamos en la lista donde se añadió el ítem
-//   if (currentListId === listId && window.itemManager) {
-//     window.itemManager.addWebSocketItem(item);
-    
-//     // Mostrar notificación si el ítem no fue añadido por el usuario actual
-//     const currentUser = getLoggedUser();
-//     if (currentUser && item.addedBy && item.addedBy.id !== currentUser.id) {
-//       showNotification(`${item.addedBy.alias} ha afegit "${item.name}"`, 'info');
-//     }
-//   }
-// }
-
 
 /**
- * Manejador para nuevos ítems
+ * Manejador per a nous ítems
  */
 function handleItemAdded(data) {
   const { listId, item } = data;
   const currentListId = getCurrentListId();
   
-  console.log('WebSocket: Ítem añadido', data, 'Lista actual:', currentListId);
+  console.log('WebSocket: Itrm afegit', data, 'Llista actual:', currentListId);
   
-  // Si estamos en la lista donde se añadió el ítem
+  // Si estem a la llista on s'ha afegit l'ítem
   if (currentListId && parseInt(currentListId) === parseInt(listId) && itemManager) {
     itemManager.addWebSocketItem(item);
     
-    // Mostrar notificación si el ítem no fue añadido por el usuario actual
+    // Mostrar notificació si l'ítem no ha estat afegit per l'usuari actual
     const currentUser = getLoggedUser();
     if (currentUser && item.addedBy && item.addedBy.id !== currentUser.id) {
       showNotification(`${item.addedBy.alias} ha afegit "${item.name}"`, 'info');
@@ -283,41 +249,20 @@ function handleItemAdded(data) {
 }
 
 
-
-// /**
-//  * Manejador para ítems actualizados
-//  */
-// function handleItemUpdated(data) {
-//   const { listId, item } = data;
-//   const currentListId = getCurrentListId();
-  
-//   // Si estamos en la lista donde se actualizó el ítem
-//   if (currentListId === listId && window.itemManager) {
-//     window.itemManager.updateWebSocketItem(item);
-    
-//     // Mostrar notificación si el ítem no fue actualizado por el usuario actual
-//     const currentUser = getLoggedUser();
-//     if (currentUser && item.addedBy && item.addedBy.id !== currentUser.id) {
-//       showNotification(`${item.addedBy.alias} ha actualitzat "${item.name}"`, 'info');
-//     }
-//   }
-// }
-
-
 /**
- * Manejador para ítems actualizados
+ * Manejador per a ítems actualitzats
  */
 function handleItemUpdated(data) {
   const { listId, item } = data;
   const currentListId = getCurrentListId();
   
-  console.log('WebSocket: Ítem actualizado', data);
+  console.log('WebSocket: Item actualitzat', data);
   
-  // Si estamos en la lista donde se actualizó el ítem
+  // Si estem a la llista on es va actualitzar l'ítem
   if (currentListId && parseInt(currentListId) === parseInt(listId) && itemManager) {
     itemManager.updateWebSocketItem(item);
     
-    // Mostrar notificación si el ítem no fue actualizado por el usuario actual
+    // Mostrar notificació si l'ítem no ha estat actualitzat per l'usuari actual
     const currentUser = getLoggedUser();
     if (currentUser && item.addedBy && item.addedBy.id !== currentUser.id) {
       showNotification(`${item.addedBy.alias} ha actualitzat "${item.name}"`, 'info');
@@ -327,36 +272,31 @@ function handleItemUpdated(data) {
 
 
 /**
- * Manejador para ítems eliminados
+ * Manejador per a ítems eliminats
  */
 function handleItemDeleted(data) {
   const { listId, itemId } = data;
   const currentListId = getCurrentListId();
   
-  console.log('WebSocket: Ítem eliminado', data);
+  console.log('WebSocket: Item eliminat', data);
   
-  // Si estamos en la lista donde se eliminó el ítem
+  // Si estem a la llista on es va eliminar l'ítem
   if (currentListId && parseInt(currentListId) === parseInt(listId) && itemManager) {
-    // Obtener información del ítem antes de eliminarlo (para mostrar en notificación)
+    // Obtenir informació de l'ítem abans d'eliminar-lo (per mostrar en notificació)
     const item = itemManager.getItemById(itemId);
     const itemName = item ? item.name : 'un ítem';
     
     itemManager.deleteWebSocketItem(itemId);
     
-    // Mostrar notificación
+    // Mostrar la notificació de l'ítem eliminat per l'usuari actual
     showNotification(`S'ha eliminat "${itemName}"`, 'info');
   }
 }
 
-// notifyListMembers(listId, isList ? 'message:deleted' : 'message-list:deleted', {
-//   listId,
-//   itemId: isList ? null : itemId,
-//   userId,
-//   messageId
 
 function handleMessagesDelete(data) {
 
-    // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+    // Importar dinàmicament el servei de missatges per evitar dependències circulars
     import('./messageService.js').then(messageService => {
       messageService.removeMessageFromView(data.messageId);
     });
@@ -366,7 +306,7 @@ function handleMessagesDelete(data) {
 
 function handleMessagesDeleteList(data) {
 
-    // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+    // Importar dinàmicament el servei de missatges per evitar dependències circulars
     import('./messageService.js').then(messageService => {
       messageService.removeMessageFromView(data.messageId);
     });
@@ -375,51 +315,51 @@ function handleMessagesDeleteList(data) {
 
 
 /**
- * Manejador para usuarios que se unen a una lista
+ * Manejador per a usuaris que s'uneixen a una llista
  */
 function handleUserJoined(data) {
   const { listId, user } = data;
   
-  // Actualizar contador de participantes si es necesario
+  // Actualitzar comptador de participants si cal
   if (listManager) {
     const list = listManager.getListById(listId);
     if (list) {
       list.participantCount = (list.participantCount || 1) + 1;
       
-      // Actualizar vista si está disponible
+      // Actualitzar vista si està disponible
       if (listViewController) {
         listViewController.updateListCard(list);
       }
       
-      // Mostrar notificación
+      // Mostrar notificació
       showNotification(`${user.alias} s'ha unit a la llista "${list.name}"`, 'info');
     }
   }
 }
 
 /**
- * Manejador para usuarios que abandonan una lista
+ * Manejador per a usuaris que abandonen una llista
  */
 function handleUserRemoved(data) {
   const { listId, user } = data;
   
-  console.log('WebSocket: Usuario ha abandonado la lista', data);
+  console.log('WebSocket: Usuari ha abandonat la llista', data);
   
-  // Actualizar contador de participantes si es necesario
+  // Actualitzar comptador de participants si cal
   if (listManager) {
     const list = listManager.getListById(listId);
     if (list) {
-      // Decrementar contador de participantes
+      // Decrementar comptador de participants
       if (list.participantCount > 0) {
         list.participantCount -= 1;
       }
       
-      // Actualizar vista si está disponible
+      // Actualitzar vista si està disponible
       if (listViewController) {
         listViewController.updateListCard(list);
       }
       
-      // Si estamos en la vista de detalle de esta lista, actualizar el contador
+      // Si estem a la vista de detall d'aquesta llista, actualitzeu el comptador
       const currentListId = getCurrentListId();
       if (currentListId && parseInt(currentListId) === parseInt(listId)) {
         const participantsElement = document.getElementById('list-participants');
@@ -430,7 +370,7 @@ function handleUserRemoved(data) {
         }
       }
       
-      // Mostrar notificación
+      // Mostrar notificació
       showNotification(`${user.alias} ha abandonat la llista "${list.name}"`, 'info');
     }
   }
@@ -438,102 +378,102 @@ function handleUserRemoved(data) {
 
 
 /**
- * Manejador para invitaciones rechazadas
+ * Manejador per a invitacions rebutjades
  */
 function handleInvitationRejected(data) {
   const { listId, listName, rejectedBy } = data;
   
-  console.log('WebSocket: Invitación rechazada', data);
+  console.log('WebSocket: Invitació rebutjada', data);
   
-  // Mostrar notificación al usuario que había enviado la invitación
+  // Mostrar notificació a l'usuari que havia enviat la invitació
   if (rejectedBy && rejectedBy.email) {
     showNotification(`${rejectedBy.email} ha rebutjat la invitació a la llista "${listName}"`, 'info');
   }
   
-  // Si el modal de configuración de la lista está abierto y es la misma lista,
-  // actualizar la lista de invitaciones pendientes
+  // Si el modal de configuració de la llista està obert i és la mateixa llista,
+  // actualitzar la llista d'invitacions pendents
   const modalContainer = document.getElementById('modal-container');
   const currentListId = getCurrentListId();
   
   if (modalContainer && !modalContainer.classList.contains('hidden') && 
       currentListId && parseInt(currentListId) === parseInt(listId)) {
     
-    // Intentar recargar los detalles de la lista para actualizar invitaciones
+    // Intentar recarregar els detalls de la llista per actualitzar invitacions
     if (window.listManager) {
       window.listManager.fetchListDetail(listId)
         .then(listDetails => {
-          // Actualizar la sección de invitaciones pendientes
+          // Actualitzar la secció d'invitacions pendents
           const pendingInvitationsContainer = document.getElementById('pending-invitations-list');
           if (pendingInvitationsContainer && listDetails.pendingInvitations) {
-            // Actualizar el contador
+            // Actualitzar el comptador
             const pendingInvitationsTitle = document.querySelector('h3:contains("Invitacions pendents")');
             if (pendingInvitationsTitle) {
               pendingInvitationsTitle.textContent = `Invitacions pendents (${listDetails.pendingInvitations.length})`;
             }
             
-            // Si no hay invitaciones pendientes, mostrar mensaje
+            // Si no hi ha invitacions pendents, mostrar missatge
             if (listDetails.pendingInvitations.length === 0) {
               pendingInvitationsContainer.innerHTML = '<div class="text-gray-500 text-center p-2">No hi ha invitacions pendents</div>';
             }
           }
         })
-        .catch(error => console.error('Error al actualizar detalles de lista tras rechazo:', error));
+        .catch(error => console.error('Error en actualitzar detalls de llista després de rebuig:', error));
     }
   }
 }
 
 /**
- * Manejador para nuevos mensajes de chat
+ * Manejador per a nous missatges de xat d'itens
  */
 function handleNewMessage(data) {
-  console.log('WebSocket: (Item) Nuevo mensaje recibido', data);
+  console.log('WebSocket: (Item) Nou missatge rebut', data);
   
-  // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+  // Importar dinàmicament el servei de missatges per evitar dependències circulars
   import('./messageService.js').then(messageService => {
     messageService.handleNewMessage(data, false);
   });
   
-  // Si el modal de chat está abierto para este ítem, actualizar la conversación
+  // Si el modal de xat està obert per a aquest ítem, actualitzeu la conversa
   // const chatModal = document.getElementById(`chat-modal-${data.itemId}`);
   const chatModal = document.getElementById(`chat-modal-${data.message.itemId}`);
   if (chatModal) {
     const chatContainer = chatModal.querySelector('.chat-messages');
     if (chatContainer) {
-      // Actualizar el chat dinámicamente
+      // Actualitzar el xat dinàmicament
       updateChatWithNewMessage(chatContainer, data.message, false);
     }
   }
 }
 
 /**
- * Manejador para nuevos mensajes de chat per a les llites
+ * Manejador per a nous missatges de xat per a les llites
  */
 function handleNewMessageList(data) {
-  console.log('WebSocket (List): Nuevo mensaje recibido', data);
+  console.log('WebSocket (List): Nou missatge rebut', data);
   
-  // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+  // Importar dinàmicament el servei de missatges per evitar dependències circulars
   import('./messageService.js').then(messageService => {
     messageService.handleNewMessage(data, true);
   });
   
-  // Si el modal de chat está abierto para este ítem, actualizar la conversación
+  // Si el modal de xat està obert per a aquest llista, actualitzeu la conversa
   const chatModal = document.getElementById(`chat-modal-list`);
   if (chatModal) {
     const chatContainer = chatModal.querySelector('.chat-messages');
     if (chatContainer) {
-      // Actualizar el chat dinámicamente
+      // Actualitzar el xat dinàmicament
       updateChatWithNewMessage(chatContainer, data.message, true);
     }
   }
 }
 
 /**
- * Manejador para mensajes leídos
+ * Manejador per a missatges llegits dels items
  */
 function handleMessagesRead(data) {
-  console.log('WebSocket: Mensajes marcados como leídos', data);
+  console.log('WebSocket: Missatges marcats com a llegits', data);
   
-  // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+  // Importar dinàmicament el servei de missatges per evitar dependències circulars
   import('./messageService.js').then(messageService => {
     messageService.handleMessagesRead(data);
   });
@@ -541,24 +481,25 @@ function handleMessagesRead(data) {
 
 
 /**
- * Manejador para mensajes leídos
+ * Manejador per a missatges llegits de les llistes
  */
 function handleMessagesReadList(data) {
-  console.log('WebSocket: Mensajes marcados como leídos', data);
+  console.log('WebSocket: Missatges marcats com a llegits', data);
   
-  // Importar dinámicamente el servicio de mensajes para evitar dependencias circulares
+  // Importar dinàmicament el servei de missatges per evitar dependències circulars
   import('./messageService.js').then(messageService => {
     messageService.handleMessagesRead(data, true);
   });
 }
 
 /**
- * Actualiza el chat con un nuevo mensaje recibido
- * @param {HTMLElement} chatContainer - Contenedor del chat
- * @param {Object} message - Datos del mensaje
+ * Actualitza el xat amb un missatge nou rebut
+ * @param {HTMLElement} chatContainer - Contenidor del xat
+ * @param {Object} message - Dades del missatge
+ * @param {boolean} isList - Indica si és un missatge de llista
  */
 function updateChatWithNewMessage(chatContainer, message, isList = false) {
-  console.log("🚀 ~ updateChatWithNewMessage ~ message:", message)
+
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const isOwnMessage = currentUser && message.sender.id === currentUser.id;
   
@@ -578,7 +519,7 @@ function updateChatWithNewMessage(chatContainer, message, isList = false) {
   // Scroll al final
   chatContainer.scrollTop = chatContainer.scrollHeight;
   
-  // Si no es un mensaje propio, marcar como leído
+  // Si no es un missatge propi, marcar com a llegit
   if (!isOwnMessage) {
     import('./messageService.js').then(messageService => {
       messageService.markMessagesAsRead((!isList ? message.itemId : message.listId), isList).catch(console.error);
@@ -588,10 +529,9 @@ function updateChatWithNewMessage(chatContainer, message, isList = false) {
 
 
 /**
- * Obtener el ID de la lista actual
- * @returns {number|null} - ID de la lista o null
+ * Obtener l'ID de la llista actual
+ * @returns {number|null} - ID de la llista actual o null si no hi ha cap
  */
 function getCurrentListId() {
-  // return window.currentListId || null;
-  return currentListId || null;
+    return currentListId || null;
 }
