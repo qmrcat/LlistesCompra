@@ -12,6 +12,9 @@ const listRoutes = require('./routes/listRoutes');
 const itemRoutes = require('./routes/itemRoutes');
 const userRoutes = require('./routes/userRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const voteRoutes = require('./routes/voteRoutes');
+
+console.clear();
 
 // Inicializar la aplicación Express
 const app = express();
@@ -28,12 +31,17 @@ app.use(express.urlencoded({ extended: true }));
 // Servir archivos estáticos del cliente
 app.use(express.static(path.join(__dirname, '../client')));
 
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.originalUrl}`);
+  next();
+});
 // Rutas API
 app.use('/api/auth',  authRoutes);
 app.use('/api/lists', listRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/votes', voteRoutes);
 
 // Ruta principal para servir la aplicación cliente
 app.get('*', (req, res) => {
@@ -47,9 +55,9 @@ initializeWebSocket(server);
 sequelize.sync({ alter: false }) // Cambiamos a false para evitar problemas con las restricciones de unicidad
   .then(() => {
     server.listen(PORT, () => {
-      console.log(`Servidor ejecutándose en el puerto ${PORT}`);
+      console.log(`Servidor executant-se al port ${PORT}`);
     });
   })
   .catch(err => {
-    console.error('index.js: Error al inicializar la base de datos:', err);
+    console.error('index.js: Error en inicialitzar la base de dades:', err);
   });

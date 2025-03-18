@@ -21,7 +21,6 @@ export function openChatModal(item, isList = false) {
     if (existingModal) return;
 
     const nameInput = document.getElementById('list-name');
-    console.log("🚀 ~ nameInput:", nameInput)
     
     // Mostrar loading mientras se cargan los mensajes
     //<div id="chat-modal-${item.id}" class="bg-white rounded-lg shadow-xl w-full max-w-xl flex flex-col h-[80vh] z-40">
@@ -92,9 +91,12 @@ export function openChatModal(item, isList = false) {
       const btnCloseChat = document.getElementById('btn-close-chat')
 
       chatForm.addEventListener('submit', (e) => {
+        //console.log("🚀 ~ showModal chatForm.addEventListener ~ e:", e)
         e.preventDefault();
+        const isList = (e.id === 'chat-form-list')
         sendChatMessage(itemId, isList);
       });
+
       
       btnCloseChat.addEventListener('click', closeModal)
 
@@ -131,7 +133,6 @@ async function loadChatMessages(itemId, isList = false) {
       chatContainer.innerHTML = '';
       
       const currentUser = getLoggedUser();
-      console.log("🚀 ~ currentUser:", currentUser)
       
       if (messages.length === 0) {
         chatContainer.innerHTML = `

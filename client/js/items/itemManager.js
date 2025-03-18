@@ -18,10 +18,12 @@ export class ItemManager {
       this.viewController.showLoading();
       
       // Obtener detalle de la lista (incluye ítems)
-      const response = await makeApiRequest(`/api/lists/${this.listId}`, 'GET');
+      const response = await makeApiRequest(`/api/lists/listsItems/${this.listId}`, 'GET');
       
+      console.log("🚀 ~ ItemManager ~ loadItems ~ response:", response)
       // Guardar ítems y renderizar
       this.items = response.list.items || [];
+            
             
       this.viewController.renderItems(this.items);
 
@@ -161,6 +163,30 @@ export class ItemManager {
       showNotification('Error al eliminar l\'ítem', 'error');
       throw error;
     }
+  }
+
+  async voteItem(itemId, action) {
+      try {
+        await makeApiRequest(`/api/votes/vote`, 'POST',
+          {
+            userId: getLoggedUser().id,
+            itemId,
+            voteType:action 
+          }
+        );
+        
+        // // Eliminar el ítem del array local
+        // this.items = this.items.filter(item => item.id !== parseInt(itemId));
+        
+        // // Actualizar vista
+        // this.viewController.removeItemFromView(itemId);
+        
+        // return true;
+      } catch (error) {
+        console.error(`Error al eliminar ítem ${itemId}:`, error);
+        showNotification('Error al eliminar l\'ítem', 'error');
+        throw error;
+      }
   }
   
   // Obtener un ítem por su ID

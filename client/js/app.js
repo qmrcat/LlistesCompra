@@ -376,6 +376,9 @@ async function showListConfigModal(listId) {
   try {
     // Obtener detalles completos de la lista para asegurar que tenemos los participantes
     const listDetails = await listManager.fetchListDetail(listId);
+    console.log("🚀 ~ showListConfigModal ~ listDetails:", listDetails)
+
+    const disabledVoting = listDetails.participantCount < 2 ? 'disabled' : '';
     
     // Crear el contenido del modal con los datos actualizados
     const modalContent = `
@@ -391,8 +394,24 @@ async function showListConfigModal(listId) {
             value="${listDetails.name}"
           >
         </div>
+        <!-- Checkbox amb Toggle Switch -->
+        <div class="pt-2">
+          <div class="flex justify-between items-center">
+            <label class="block text-sm font-medium text-gray-700">Activar la votació</label>
+            <div id="checkbox-voting" class="flex items-center space-x-3 cursor-pointer">
+              <div id="toggle-voting" class="relative w-10 h-6 bg-gray-300 rounded-full transition-colors duration-300">
+                <div id="toggle-circle-voting" class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300"></div>
+                <input type="hidden" id="activate-voting" name="activate-voting" value="${listDetails.activateVoting}" ${disabledVoting}>
+              </div>
+              <span id="status-voting" class="text-gray-700 text-sm">Desactivat</span>
+            </div>
+          </div>
+          <p id="description-voting" class="text-xs text-gray-500 mt-1">
+            Marca aquesta casella per activar la votació d'ítems en aquesta llista.
+          </p>
+        </div>      
         
-        <div class="mb-4">
+        <div class="my-4 ">
           <h3 class="font-medium text-gray-700 mb-2">Participants (${listDetails.participants ? listDetails.participants.length : 0})</h3>
           <div id="participant-list" class="space-y-2 max-h-40 overflow-y-auto">
             ${listDetails.participants ? listDetails.participants.map(p => `
@@ -478,7 +497,55 @@ async function showListConfigModal(listId) {
       document.getElementById('btn-cancel-config').addEventListener('click', closeModal);
       document.getElementById('btn-save-config').addEventListener('click', () => updateListConfig(listId));
       document.getElementById('btn-send-invite').addEventListener('click', () => sendInvitation(listId));
-            
+
+      
+      const checkboxVoting = document.getElementById('checkbox-voting');
+      const toggleVoting = document.getElementById('toggle-voting');
+      const toggleCircleVoting = document.getElementById('toggle-circle-voting');
+      const statusTextVoting = document.getElementById('status-voting');
+      const descriptionVoting = document.getElementById('description-voting');
+      
+      const activateVoting = document.getElementById('activate-voting');
+
+      // Valor inicial
+      let isCheckedVoting = activateVoting.value === '1';
+
+          // Funció per obtenir el valor (0 o 1)
+    function getValueVoting() {
+      return isCheckedVoting ? 1 : 0;
+    }
+    
+    // Funció per actualitzar la UI
+    function updateUIVoting() {
+        const value = getValueVoting();
+        
+        // Actualitzar l'estat visual
+        if (isCheckedVoting ) {
+          toggleVoting.classList.remove('bg-gray-300');
+          toggleVoting.classList.add('bg-blue-500');
+          toggleCircleVoting.classList.add('transform', 'translate-x-4');
+          statusTextVoting.textContent = 'Activat';
+          descriptionVoting.textContent = 'Desmarca aquesta casella per desactivar la votació d\'ítems en aquesta llista.';
+        } else {
+          toggleVoting.classList.remove('bg-blue-500');
+          toggleVoting.classList.add('bg-gray-300');
+          toggleCircleVoting.classList.remove('transform', 'translate-x-4');
+          statusTextVoting.textContent = 'Desactivat';
+          descriptionVoting.textContent = 'Marca aquesta casella per activar la votació d\'ítems en aquesta llista.';
+        }
+        
+        // Actualitzar el valor del camp ocult
+        activateVoting.value = value;
+        
+        return value;
+      }
+
+      // Event listener per al checkbox
+      activateVoting.addEventListener('click', function() {
+        isCheckedVoting = !isCheckedVoting;
+        updateUIVoting();
+      });
+
       // Añadir evento para abandonar la lista si no es propietario
       const leaveListBtn = document.getElementById('btn-leave-list');
       if (leaveListBtn) {
@@ -544,78 +611,11 @@ async function showListConfigModal(listId) {
 }
 
 
-// function __showListConfigModal(listId) {
-
-//   const list = listManager.getListById(listId);
-  
-//   if (!list) {
-//     showNotification('Llista no trobada', 'error');
-//     return;
-//   }
-  
-//   console.log("🚀 ~ showListConfigModal ~ list.participants:", list.participants)
-
-
-//   const modalContent = `
-//     <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-//       <h2 class="text-xl font-bold mb-4">Configuració de la llista</h2>
-      
-//       <div class="mb-4">
-//         <label for="list-name" class="block text-sm font-medium text-gray-700 mb-1">Nom de la llista</label>
-//         <input 
-//           type="text" 
-//           id="list-name" 
-//           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
-//           value="${list.name}"
-//         >
-//       </div>
-      
-//       <div class="mb-4">
-//         <h3 class="font-medium text-gray-700 mb-2">Participants</h3>
-//         <div id="participant-list" class="space-y-2 max-h-40 overflow-y-auto">
-//           ${list.participants ? list.participants.map(p => `
-//             <div class="flex items-center justify-between p-2 bg-gray-50 rounded">
-//               <span>${p.alias}</span>
-//               <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">${p.role}</span>
-//             </div>
-//           `).join('') : ''}
-//         </div>
-//       </div>
-      
-//       <div class="mb-4">
-//         <h3 class="font-medium text-gray-700 mb-2">Convidar participant</h3>
-//         <div class="flex space-x-2">
-//           <input 
-//             type="email" 
-//             id="invite-email" 
-//             class="flex-grow px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-blue-200" 
-//             placeholder="Correu electrònic"
-//           >
-//           <button id="btn-send-invite" class="px-3 py-2 bg-primary hover:bg-blue-600 text-white rounded shadow transition">
-//             <i class="fas fa-paper-plane"></i>
-//           </button>
-//         </div>
-//       </div>
-      
-//       <div class="flex justify-end space-x-2">
-//         <button id="btn-cancel-config" class="px-4 py-2 border rounded text-gray-600 hover:bg-gray-100 transition">Cancel·lar</button>
-//         <button id="btn-save-config" class="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded shadow transition">Desar</button>
-//       </div>
-//     </div>
-//   `;
-  
-//   showModal(modalContent, () => {
-//     document.getElementById('btn-cancel-config').addEventListener('click', closeModal);
-//     document.getElementById('btn-save-config').addEventListener('click', () => updateListConfig(listId));
-//     document.getElementById('btn-send-invite').addEventListener('click', () => sendInvitation(listId));
-//   });
-// }
-  
-
 // Actualizar configuración de lista
 async function updateListConfig(listId) {
   const nameInput = document.getElementById('list-name');
   const newName = nameInput.value.trim();
+  const activateVoting = document.getElementById('activate-voting').value;
   
   if (!newName) {
     showNotification('El nom de la llista no pot estar buit', 'error');
@@ -624,7 +624,7 @@ async function updateListConfig(listId) {
   
   try {
     // Implementar llamada a API para actualizar el nombre de la lista
-    await listManager.updateList(listId, { name: newName });
+    await listManager.updateList(listId, { name: newName,  activateVoting});
     
     // Actualizar UI
     document.getElementById('list-name').textContent = newName;

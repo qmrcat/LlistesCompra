@@ -95,6 +95,9 @@ export function setupWebSocket() {
   socket.on('message-list:read', handleMessagesReadList);
   socket.on('message-list:deleted', handleMessagesDeleteList);
 
+  socket.on('vote:taken', handleVoteItem);
+  
+
   // 'message:deleted' : 'message-list:deleted'
 }
 
@@ -314,6 +317,32 @@ function handleMessagesDeleteList(data) {
 }
 
 
+function handleVoteItem(data) { 
+  //{ userId, itemId, voteType, countUp, countDown }
+  console.log("🚀 ~ handleVoteItem ~ data:", data)
+
+  const { userId, itemId, voteType, countUp, countDown } = data;
+  console.log("🚀 ~ handleVoteItem ~ countDown:", countDown)
+  console.log("🚀 ~ handleVoteItem ~ countUp:", countUp)
+
+  const currentUser = getLoggedUser();
+
+  const voteElement = document.querySelector(`.item-container[data-item-id="${itemId}"]`);
+  const voteContainerElement = voteElement.querySelector('.container-vote-item');
+  const voteUpElement = voteContainerElement.querySelector('.vote-up');
+  const voteDownElement = voteContainerElement.querySelector('.vote-down');
+  const voteUpCountElement = voteContainerElement.querySelector('.vote-up-count');
+  const voteDownCountElement = voteContainerElement.querySelector('.vote-down-count');
+  voteUpCountElement.innerHTML = countUp
+  voteDownCountElement.innerHTML = countDown
+
+  if (currentUser.id === userId) {
+    voteUpElement.disabled = ( voteType === 'up');
+    voteDownElement.disabled = ( voteType === 'down');
+  }
+  //container-vote-item
+}
+
 /**
  * Manejador per a usuaris que s'uneixen a una llista
  */
@@ -426,8 +455,7 @@ function handleInvitationRejected(data) {
  * Manejador per a nous missatges de xat d'itens
  */
 function handleNewMessage(data) {
-  console.log('WebSocket: (Item) Nou missatge rebut', data);
-  
+    
   // Importar dinàmicament el servei de missatges per evitar dependències circulars
   import('./messageService.js').then(messageService => {
     messageService.handleNewMessage(data, false);

@@ -29,7 +29,11 @@ const initializeDatabase = (dbType = 'sqlite') => {
     sequelize = new Sequelize({
       dialect: 'sqlite',
       storage: path.join(__dirname, '../../database.sqlite'),
-      logging: false
+      logging: false,
+      dialectOptions: {
+        // Activa el suport per a claus foranes
+        foreignKeys: true
+      }
     });
   }
 

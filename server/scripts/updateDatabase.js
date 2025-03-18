@@ -6,7 +6,7 @@
  */
 
 const { sequelize } = require('../config/database');
-const { User, List, Item, ListUser, Invitation, Message } = require('../models');
+const { User, List, Item, ListUser, Invitation, Message, Vote } = require('../models');
 
 async function updateDatabase() {
   try {
@@ -22,14 +22,19 @@ async function updateDatabase() {
       await Message.sync({ force: true });
       console.log('Tabla Messages creada exitosamente.');
     }
+    if (!tables.includes('Vote')) {
+      console.log('Creando tabla Vote...');
+      await Vote.sync({ force: true });
+      console.log('Tabla Vote creada exitosamente.');
+    }
     
     // Si necesitas verificar otras tablas:
-    const requiredTables = ['Users', 'Lists', 'Items', 'ListUsers', 'Invitations'];
-    for (const table of requiredTables) {
-      if (!tables.includes(table)) {
-        console.log(`Tabla ${table} no encontrada. Se recomienda reconstruir toda la base de datos.`);
-      }
-    }
+    // const requiredTables = ['User', 'List', 'Item', 'ListUser', 'Invitations','Message'];
+    // for (const table of requiredTables) {
+    //   if (!tables.includes(table)) {
+    //     console.log(`Tabla ${table} no encontrada. Se recomienda reconstruir toda la base de datos.`);
+    //   }
+    // }
     
     console.log('Actualización de la base de datos completada.');
     process.exit(0);

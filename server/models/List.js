@@ -15,6 +15,11 @@ const List = sequelize.define('List', {
     type: DataTypes.INTEGER,
     allowNull: false
   },
+  activateVoting: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
   lastItemAddedAt: {
     type: DataTypes.DATE,
     allowNull: true

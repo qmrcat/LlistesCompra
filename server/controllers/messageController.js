@@ -118,7 +118,7 @@ const sendMessage = async (req, res) => {
     };
 
     // Notificar por WebSocket
-    websocketService.notifyNewMessage((!isList ? item.listId : listId), (isList ? null : parseInt(listId)), formattedMessage, isList);
+    websocketService.notifyNewMessage((!isList ? item.listId : listId), (isList ? null : parseInt(itemId)), formattedMessage, isList);
 
     res.status(201).json({
       success: true,
@@ -491,16 +491,14 @@ const deleteMessage = async (req, res) => {
   try {
 
     const fullPath = req.originalUrl; 
-    console.log("🚀 ~ deleteMessage ~ fullPath:", fullPath)
     const basePath = req.baseUrl + req.path;
     // Comprovar si la ruta conté '/list'
     const isAll = fullPath.includes('/all/');
-    console.log("🚀 ~ deleteMessage ~ isAll:", isAll)
+    
     const isList = fullPath.includes('/list/');
-    console.log("🚀 ~ deleteMessage ~ isList:", isList)
+    
 
     const { messageId } = req.params;
-    console.log("🚀 ~ deleteMessage ~ messageId:", messageId)
     let listId, itemId
 
     const userId = req.user.id;
@@ -515,13 +513,11 @@ const deleteMessage = async (req, res) => {
     }
 
     listId = message.listId
-    console.log("🚀 ~ deleteMessage ~ listId:", listId)
     itemId = message.itemId
-    console.log("🚀 ~ deleteMessage ~ itemId:", itemId)
 
     if (itemId) {
         const data = await getItemById(itemId)
-        console.log("🚀 ~ deleteMessage ~ data:", data)
+        // console.log("🚀 ~ deleteMessage ~ data:", data)
         if (!data || !data.success) {
           return res.status(404).json({
             success: false,
@@ -531,9 +527,6 @@ const deleteMessage = async (req, res) => {
         listId = data.item.listId
     }
       
-    console.log("🚀 ~222 deleteMessage ~ listId:", listId)
-
-
     // Verificar si el usuario tiene acceso a la lista
     const userList = await ListUser.findOne({
       where: { 

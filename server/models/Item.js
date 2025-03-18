@@ -37,6 +37,47 @@ const Item = sequelize.define('Item', {
     type: DataTypes.STRING(16),
     allowNull: false
   },
-});
+}
+);
+      
 
 module.exports = Item;
+
+
+/*
+
+, {
+  hooks: {
+    afterFind: async (items) => {
+      if (!items) return items;
+      
+      // Si és una sola instància
+      if (!Array.isArray(items)) {
+        items = [items];
+      }
+      let upTotal = 0;
+
+      for (const item of items) {
+        
+        
+        // if (item.Votes) {
+        //   item.dataValues.upCount = item.Votes.filter(v => v.voteType === 'up').length;
+        //   item.dataValues.downCount = item.Votes.filter(v => v.voteType === 'down').length;
+        // } else {
+          item.dataValues.upCount = 0;
+          item.dataValues.downCount = 0;
+          item.upTotal = upTotal;
+          item.downTotal = upTotal+5;
+
+          upTotal += 1;
+
+          // console.log("🚀 ~ afterFind: ~ item:", item)
+        // }
+      }
+      console.log("🚀 ~ afterFind: ~ items:", items)
+      return items;
+    }
+  }
+}
+
+*/

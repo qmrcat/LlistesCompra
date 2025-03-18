@@ -1,4 +1,4 @@
-const { Item, List, ListUser, User } = require('../models');
+const { Item, List, ListUser, User, Vote } = require('../models');
 const { emitToList } = require('../config/websocket');
 const { Op } = require('sequelize');
 
@@ -66,6 +66,8 @@ const addItem = async (req, res) => {
       attributes: ['id', 'alias']
     });
 
+    
+
     // Preparar respuesta con datos completos
     const itemResponse = {
       id: newItem.id,
@@ -79,7 +81,9 @@ const addItem = async (req, res) => {
       },
       createdAt: newItem.createdAt,
       updatedAt: newItem.updatedAt,
-      typesUnits: newItem.typesUnits
+      typesUnits: newItem.typesUnits,
+      upVotes: 0,
+      downVotes: 0
     };
 
     // Notificar a todos los usuarios de la lista vía WebSocket
@@ -175,6 +179,8 @@ const updateItem = async (req, res) => {
       attributes: ['id', 'alias']
     });
 
+    const countVotes = getVoteCounts(itemId)
+
     // Preparar respuesta con datos completos
     const itemResponse = {
       id: item.id,
@@ -188,7 +194,9 @@ const updateItem = async (req, res) => {
       },
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
-      typesUnits: item.typesUnits
+      typesUnits: item.typesUnits,
+      upVotes: countVotes.upVotes,
+      downVotes: countVotes.downVotes
     };
 
     // Notificar a todos los usuarios de la lista vía WebSocket
@@ -220,7 +228,7 @@ const deleteItem = async (req, res) => {
     if (!item) {
       return res.status(404).json({
         success: false,
-        message: 'Ítem no encontrado'
+        message: 'Ítem no trobat'
       });
     }
 
@@ -232,41 +240,51 @@ const deleteItem = async (req, res) => {
         role: {
           [Op.in]: ['owner', 'editor']
         }
-      }
+      },
+      transaction
     });
     
 
     if (!userList) {
       return res.status(403).json({
         success: false,
-        message: 'No tienes permiso para eliminar ítems de esta lista'
+        message: 'No teniu permís per eliminar ítems d\'aquesta llista'
       });
     }
     
-    // Verificar que el usuario sea el propietario de la lista o quien agregó el ítem
+    // Verificar que l'usuari sigui el propietari de la llista o qui va afegir l'ítem
     const isOwner = userList.role === 'owner';
     const isCreator = item.addedBy === userId;
 
     if (!isOwner && !isCreator) {
       return res.status(403).json({
         success: false,
-        message: 'Solo el propietario de la lista o quien creó el ítem puede eliminarlo'
+        message: 'Només el propietari de la llista o qui va crear l\'ítem el pot eliminar'
       });
     }
 
 
-    // Guardar el listId antes de eliminar el ítem
+    // Desar el listId abans d'eliminar l'ítem
     const listId = item.listId;
     const itemIdList = item.id;
 
-    // Notificar a todos los usuarios de la lista vía WebSocket
+    // Primer eliminem tots els vots associats a l'ítem
+    await Vote.destroy({
+      where: { itemId },
+      transaction
+    });
+
+    // Notificar a tots els usuaris de la llista via WebSocket
     const websocketService = require('../services/websocketService');
     websocketService.notifyItemDeleted(listId, itemId);
 
     // Eliminar el ítem
-    await item.destroy();
+    await item.destroy({ transaction });
 
-    // Notificar a todos los usuarios de la lista vía WebSocket
+    // Confirmar la transacció
+    await transaction.commit();
+
+    // Notificar a tots els usuaris de la llista via WebSocket
     emitToList(listId, 'item:deleted', {
       listId,
       itemIdList
@@ -274,13 +292,13 @@ const deleteItem = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Ítem eliminado correctamente'
+      message: 'Ítem i vots associats eliminats correctament'
     });
   } catch (error) {
-    console.error('Error al eliminar ítem:', error);
+    console.error('Error en suprimir l\'ítem i els vots:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar ítem'
+      message: 'Error en suprimir l\'ítem i els vots'
     });
   }
 };
@@ -363,5 +381,5 @@ module.exports = {
   addItem,
   updateItem,
   deleteItem,
-  getItemById
+  getItemById,
 };

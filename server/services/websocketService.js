@@ -213,7 +213,7 @@ const getUserSockets = (userId) => {
  * @param {object} message - Datos del mensaje
  */
 const notifyNewMessage = (listId, itemId, message, isList = false) => {
-  console.log("🚀 ~ notifyNewMessage ~ message:", message)
+
   const io = getIO();
   if (io) {
     io.to(`list:${listId}`).emit((!isList ? 'message:new' : 'message-list:new'), {
@@ -243,6 +243,24 @@ const notifyMessagesRead = (listId, itemId, userId, isList = false) => {
   }
 };
 
+//{ userId, itemId, voteType }
+const notifyNewVoting = ( listId, paramVote ) => {
+  //{ userId, itemId, voteType, countUp:voteCounts.upVotes, countDown:voteCounts.downVotes }
+  console.log("🚀 ~ notifyNewVoting ~ listId:", listId)
+  console.log("🚀 ~ notifyNewVoting ~ paramVote:", paramVote)
+  const io = getIO();
+  if (io) {
+    io.to(`list:${listId}`).emit('vote:taken', {
+      listId,
+      itemId: paramVote.itemId,
+      userId: paramVote.userId,
+      voteType: paramVote.voteType,
+      countUp: paramVote.countUp,
+      countDown: paramVote.countDown
+    });
+    // console.log(`Notificació de mensajes leídos enviada a la lista ${listId}, ítem ${itemId}`);
+  }
+}
 
 module.exports = {
   notifyItemAdded,
@@ -256,4 +274,5 @@ module.exports = {
   notifyNewMessage,
   notifyMessagesRead,
   notifyMessageDeleted,
+  notifyNewVoting,
 };

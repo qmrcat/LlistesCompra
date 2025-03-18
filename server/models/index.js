@@ -4,6 +4,7 @@ const Item = require('./Item');
 const ListUser = require('./ListUser');
 const Invitation = require('./Invitation');
 const Message = require('./Message');
+const Vote = require('./Vote');
 
 // Definir relaciones entre modelos
 User.belongsToMany(List, { through: ListUser, foreignKey: 'userId' });
@@ -31,6 +32,12 @@ Message.belongsTo(List, { foreignKey: 'listId' });
 User.hasMany(Message, { foreignKey: 'senderId' });
 Message.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 
+Item.hasMany(Vote, { foreignKey: 'itemId' });
+Vote.belongsTo(Item, { foreignKey: 'itemId' });
+
+User.hasMany(Vote, { foreignKey: 'userId' });
+Vote.belongsTo(User, { foreignKey: 'userId'});
+
 
 module.exports = {
   User,
@@ -38,5 +45,6 @@ module.exports = {
   Item,
   ListUser,
   Invitation,
-  Message
+  Message,
+  Vote
 };

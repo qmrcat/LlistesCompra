@@ -1,5 +1,5 @@
-const { List, ListUser, Item, User, Invitation } = require('../models');
-const { Op } = require('sequelize');
+const { List, ListUser, Item, User, Invitation, Vote } = require('../models');
+const { Op, literal, fn, col, where  } = require('sequelize');
 const { emitToList } = require('../config/websocket');
 const crypto = require('crypto');
 
@@ -104,8 +104,68 @@ const getUserLists = async (req, res) => {
   }
 };
 
+
+
+ 
+// Actualizar el nombre de una lista
+const updateListDetail = async (req, res) => {
+
+  console.log("soc a updateListDetail")
+
+  try {
+    const { listId } = req.params;
+    const { name, activateVoting } = req.body;  
+    const userId = req.user.id;
+    
+
+
+    // Verificar si el usuario tiene acceso a la lista
+    const userList = await ListUser.findOne({
+      where: { userId, listId } 
+    });
+
+    if (!userList) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes acceso a esta lista'
+      });
+    }
+
+    // Actualizar el nombre de la lista
+    const list = await List.findByPk(listId);
+    list.name = name;
+    list.activateVoting = activateVoting;
+    await list.save();
+
+
+    
+    res.json({
+      success: true,
+      message: 'Nom de la llista actualitzat correctament',
+
+    });
+  } catch (error) {
+    console.error('Error al actualizar el nombre de la lista:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al actualizar el nombre de la lista'
+    });
+  }
+};
+
+
+
+
+
 // Obtener detalle de una lista específica
 const getListDetail = async (req, res) => {
+
+  const fullPath = req.originalUrl; 
+  const basePath = req.baseUrl + req.path;
+  // Comprovar si la ruta conté '/list'
+  const isGetList = fullPath.includes('/list/');
+  
+
   try {
     const { listId } = req.params;
     const userId = req.user.id;
@@ -122,42 +182,76 @@ const getListDetail = async (req, res) => {
       });
     }
 
+    let list = null;
 
     // Obtener detalles de la lista
-    const list = await List.findByPk(listId, {
-      include: [
-        {
-          model: User,
-          attributes: ['id', 'alias'],
-          through: { attributes: ['role'] }
-        },
-        {
-          model: Item,
-          include: [{
+    if (isGetList){
+      list = await List.findByPk(listId, {
+        include: [
+          {
             model: User,
-            as: 'creator',
-            attributes: ['id', 'alias']
-          }]
-        },
-        {
-          model: Invitation,
-          where: {
-            accepted: false,
-            expiresAt: {
-              [Op.gt]: new Date()
-            }
+            attributes: ['id', 'alias'],
+            through: { attributes: ['role'] }
           },
-          required: false,
+          {
+            model: Invitation,
+            where: {
+              accepted: false,
+              expiresAt: {
+                [Op.gt]: new Date()
+              }
+            },
+            required: false,
+            include: [
+              {
+                model: User,
+                as: 'inviter',
+                attributes: ['id', 'alias']
+              }
+            ]
+          }
+        ]
+      });
+
+    } else {
+        list = await List.findByPk(listId, {
           include: [
             {
               model: User,
-              as: 'inviter',
-              attributes: ['id', 'alias']
+              attributes: ['id', 'alias'],
+              through: { attributes: ['role'] }
+            },
+            {
+              model: Item,
+              include: [
+                {
+                  model: User,
+                  as: 'creator',
+                  attributes: ['id', 'alias']
+                }
+              ],
+
+            },
+            {
+              model: Invitation,
+              where: {
+                accepted: false,
+                expiresAt: {
+                  [Op.gt]: new Date()
+                }
+              },
+              required: false,
+              include: [
+                {
+                  model: User,
+                  as: 'inviter',
+                  attributes: ['id', 'alias']
+                }
+              ]
             }
           ]
-        }
-      ]
-    });
+        });
+    }
 
     if (!list) {
       return res.status(404).json({
@@ -166,45 +260,111 @@ const getListDetail = async (req, res) => {
       });
     }
 
-    // Formatear respuesta
-    const formattedList = {
-      id: list.id,
-      name: list.name,
-      createdBy: list.createdBy,
-      createdAt: list.createdAt,
-      participants: list.Users.map(user => ({
-        id: user.id,
-        alias: user.alias,
-        role: user.ListUser.role
-      })),
-      items: list.Items.map(item => ({
-        id: item.id,
-        name: item.name,
-        quantity: item.quantity,
-        completed: item.completed,
-        notes: item.notes,
-        addedBy: {
-          id: item.creator.id,
-          alias: item.creator.alias
-        },
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-        typesUnits: item.typesUnits
-      })),
-      pendingInvitations: list.Invitations ? list.Invitations.map(invitation => ({
-        id: invitation.id,
-        email: invitation.email,
-        token: invitation.token,
-        expiresAt: invitation.expiresAt,
-        invitedBy: invitation.inviter ? {
-          id: invitation.inviter.id,
-          alias: invitation.inviter.alias
-        } : null,
-        createdAt: invitation.createdAt
-      })) : [],
-      participantCount: list.Users.length,
-      userRole: userList.role
-    };
+    let formattedList
+
+    if (!isGetList){
+        const voteCounts = {};
+        const userVoteMap = {};
+
+        if(list.activateVoting){
+
+            // Obtener votos del usuario para los ítems de la lista
+            const userVotes = await Vote.findAll({
+              where: {
+                userId,
+                itemId: list.Items.map(item => item.id)
+              }
+            });
+
+            // Crear un mapa itemId -> voto del usuario
+            // const userVoteMap = {};
+            for (const uv of userVotes) {
+              userVoteMap[uv.itemId] = uv.voteType;
+            }
+
+          }
+          // Preparar los votos para todos los ítems (upVotes y downVotes)
+          //const voteCounts = {};
+          for (const item of list.Items) {
+            voteCounts[item.id] = {
+              upVotes: await Vote.count({ where: { itemId: item.id, voteType: 'up' } }) || 0,
+              downVotes: await Vote.count({ where: { itemId: item.id, voteType: 'down' } }) || 0
+            };
+          }
+    
+      // Formatear respuesta
+      formattedList = {
+        id: list.id,
+        name: list.name,
+        createdBy: list.createdBy,
+        createdAt: list.createdAt,
+        participants: list.Users.map(user => ({
+          id: user.id,
+          alias: user.alias,
+          role: user.ListUser.role
+        })),
+        activateVoting: list.activateVoting,
+        items: list.Items.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          completed: item.completed,
+          notes: item.notes,
+          addedBy: {
+            id: item.creator.id,
+            alias: item.creator.alias
+          },
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+          typesUnits: item.typesUnits,
+          upVotes: voteCounts[item.id].upVotes,
+          downVotes: voteCounts[item.id].downVotes,
+          userVote: userVoteMap[item.id] || null
+        })),
+        pendingInvitations: list.Invitations ? list.Invitations.map(invitation => ({
+          id: invitation.id,
+          email: invitation.email,
+          token: invitation.token,
+          expiresAt: invitation.expiresAt,
+          invitedBy: invitation.inviter ? {
+            id: invitation.inviter.id,
+            alias: invitation.inviter.alias
+          } : null,
+          createdAt: invitation.createdAt
+        })) : [],
+        participantCount: list.Users.length,
+        userRole: userList.role
+      };
+    } else {
+      // Formatear respuesta
+      formattedList = {
+        id: list.id,
+        name: list.name,
+        createdBy: list.createdBy,
+        createdAt: list.createdAt,
+        participants: list.Users.map(user => ({
+          id: user.id,
+          alias: user.alias,
+          role: user.ListUser.role
+        })),
+        activateVoting: list.activateVoting,
+        pendingInvitations: list.Invitations ? list.Invitations.map(invitation => ({
+          id: invitation.id,
+          email: invitation.email,
+          token: invitation.token,
+          expiresAt: invitation.expiresAt,
+          invitedBy: invitation.inviter ? {
+            id: invitation.inviter.id,
+            alias: invitation.inviter.alias
+          } : null,
+          createdAt: invitation.createdAt
+        })) : [],
+        participantCount: list.Users.length,
+        userRole: userList.role
+      }
+    }
+
+    // console.log("🚀 ~ getListDetail ~ list.Items:", list.Items)
 
     res.json({
       success: true,
@@ -855,5 +1015,6 @@ module.exports = {
   resendInvitation,
   leaveList,
   rejectInvitation,
-  getListById
+  getListById,
+  updateListDetail
 };

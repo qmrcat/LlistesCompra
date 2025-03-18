@@ -2,6 +2,7 @@
 import { showModal, closeModal, aliasUsuari } from '../app.js';
 import { showNotification } from '../ui/notification.js';
 import { truncateText } from '../utils/validation.js';
+import { formatTimeAgo } from '../utils/utilities.js';
 
 export class ItemViewController {
   constructor(itemManager) {
@@ -68,6 +69,7 @@ export class ItemViewController {
       return new Date(a.createdAt) - new Date(b.createdAt);
     });
     
+    
     sortedItems.forEach(item => {
       this.addItemToView(item, false);
     });
@@ -75,6 +77,9 @@ export class ItemViewController {
   
   // Añadir un ítem a la vista
   addItemToView(item, prepend = true) {
+  
+
+    const votingActive = true;
 
     // Eliminar mensaje de "no hay ítems" si existe
     if (this.itemsContainer.querySelector('.text-center')) {
@@ -82,31 +87,14 @@ export class ItemViewController {
     }
     let marginIntemAlias = ''
     if(aliasUsuari === item.addedBy.alias){
-      marginIntemAlias = 'bg-green-200 ms-14'
+      marginIntemAlias = `bg-green-200 ms-14 ${votingActive ? 'mb-4' : ''}`
     } else {
-      marginIntemAlias = 'bg-blue-200 me-14'
+      marginIntemAlias = `bg-blue-200 me-14 ${votingActive ? 'mb-4' : ''}`
     }
 
 
-
-  /*
-  
-<div class="grid grid-cols-6 grid-rows-5">
-    <div >1</div>
-    <div class="col-span-3">2</div>
-    <div class="col-start-5">4</div>
-    <div class="col-start-6">5</div>
-    <div class="col-span-5 col-start-2 row-start-2">6</div>
-    <div class="col-start-2 row-start-3">7</div>
-    <div class="col-span-3 col-start-3 row-start-3">8</div>
-    <div class="col-start-6 row-start-3">9</div>
-</div>
-      
-  */
-
-
     const itemElement = document.createElement('div');
-    itemElement.className = `item-container rounded-lg shadow p-2 ${item.completed ? 'item-completed' : ''} fade-in ${marginIntemAlias}`;
+    itemElement.className = `item-container rounded-lg shadow p-2 ${item.completed ? 'item-completed' : ''} fade-in ${marginIntemAlias} relative`;
     itemElement.dataset.itemId = item.id;
 
     // Determinar si el usuario puede editar este ítem
@@ -127,11 +115,13 @@ export class ItemViewController {
         <span class="flex items-center text-xs text-gray-500 mt-2">
           <i class="fas fa-user text-primary mr-1"></i>
           ${item.addedBy ? item.addedBy.alias : 'Usuari'}
+          <i class="fas fa-clock text-primary ms-4 mr-1" data-createdat="${item.createdAt}"></i>
+          ${formatTimeAgo(item.createdAt)}
         </span>
         <div class="relative">
           <button 
             class="chat-button w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer relative" 
-            aria-label="Obrir el xat per aquest producte" data-microtip-position="top-left" data-microtip-size="medium"  role="tooltip"
+            aria-label="Obrir el xat per aquest producte" data-microtip-position="top-left" data-microtip-size="medium" role="tooltip"
           >
             <i class="fas fa-comments"></i>
             <span 
@@ -158,6 +148,37 @@ export class ItemViewController {
         </div>
       </div>
     ` : '';
+
+    const disabledVoteUP = item.userVote === 'up' ? 'disabled' : '';
+    const disabledVoteDown = item.userVote === 'down' ? 'disabled' : '';
+
+    const votingSection = `
+        <!-- Icones de valoració parcialment fora del div -->
+        <div class="container-vote-item absolute -bottom-4 left-6 flex space-x-3">
+            <!-- Polze amunt amb comptador -->
+            <div class="flex items-center">
+              <button 
+                class="vote-up w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center shadow-md hover:bg-green-600 cursor-pointer disabled:bg-gray-200 disabled:cursor-not-allowed"
+                ${disabledVoteUP}
+              >
+                <i class="fas fa-thumbs-up text-xs"></i>
+              </button>
+              <span class="vote-up-count ml-1 bg-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">${item.upVotes}</span>
+            </div>
+            
+            <!-- Polze avall amb comptador -->
+            <div class="flex items-center">
+              <button 
+                class="vote-down w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md hover:bg-red-600 cursor-pointer disabled:bg-gray-200 disabled:cursor-not-allowed"
+                ${disabledVoteDown}
+              >
+                <i class="fas fa-thumbs-down text-xs"></i>
+              </button>
+              <span class="vote-down-count ml-1 bg-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">${item.downVotes}</span>
+            </div>
+          </div>
+        </div>
+    `
 
     if (typeof item.quantity === 'string') item.quantity = parseFloat(item.quantity);
     const itemQuantity = item.quantity.toFixed(3).replace('.', ',')
@@ -204,6 +225,8 @@ export class ItemViewController {
           ${notesHtml}
           ${creatorBadge}
         </div>
+        ${votingActive ? votingSection : ''}
+
       </div>
     `;
     
@@ -380,7 +403,8 @@ addItemEvents(itemElement, item, canEdit) {
   const quantityValue = itemElement.querySelector('.quantity-value');
   const typesUnits = itemElement.querySelector('.types-units');
 
-
+  const voteUp = itemElement.querySelector('.vote-up');
+  const voteDown = itemElement.querySelector('.vote-down');
 
   // const btnXatItem = itemElement.querySelector('.btn-xat-item');
 
@@ -441,6 +465,14 @@ import('../utils/messageService.js').then(messageService => {
   //   this.showXatItem(item)    
   // });
 
+  // VOTACIONS
+  voteUp.addEventListener('click', () => {
+    this.votingAcction(item, 'up')
+  });
+
+  voteDown.addEventListener('click', () => {
+    this.votingAcction(item, 'down')
+  });
 
   if (item.notes){
     const editNotesText = itemElement.querySelector('div.edit-notes-text');
@@ -669,6 +701,10 @@ import('../utils/messageService.js').then(messageService => {
       // Enfocar el textarea
       notesTextarea.focus();
     });
+  }
+
+  votingAcction(item, action){
+      this.itemManager.voteItem(item.id, action);
   }
 
   // showXatItem(item){

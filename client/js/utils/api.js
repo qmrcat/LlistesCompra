@@ -9,9 +9,12 @@ import { getAuthToken, logout } from '../auth/auth.js';
  * @returns {Promise<any>} - Promesa con la respuesta
  */
 export async function makeApiRequest(endpoint, method = 'GET', data = null) {
-  console.log("🚀 ~ makeApiRequest ~ endpoint:", endpoint)
+
+  console.log("endpoint:", endpoint, "method:", method, "data:", data)
+  
   try {
     const token = getAuthToken();
+    console.log("🚀 ~ makeApiRequest ~ token:", token)
     
     // Opciones para fetch
     const options = {
@@ -32,6 +35,7 @@ export async function makeApiRequest(endpoint, method = 'GET', data = null) {
     }
     
     // Realizar petición
+    console.log("🚀 ~ makeApiRequest ~ options:", options)
     const response = await fetch(endpoint, options);
     
     // Convertir respuesta a JSON

@@ -51,7 +51,7 @@ export class ListManager {
 async fetchListDetail(listId) {
   try {
     console.log(`Obteniendo detalles de la lista ${listId}...`);
-    const response = await makeApiRequest(`/api/lists/${listId}`, 'GET');
+    const response = await makeApiRequest(`/api/lists/list/${listId}`, 'GET');
     
     if (!response.success || !response.list) {
       throw new Error('No se pudo obtener el detalle de la lista');
@@ -75,28 +75,6 @@ async fetchListDetail(listId) {
     throw error;
   }
 }
-
-  // async __fetchListDetail(listId) {
-  //   try {
-  //     const response = await makeApiRequest(`/api/lists/${listId}`, 'GET');
-      
-  //     // Actualizar la lista en el array local
-  //     const listIndex = this.lists.findIndex(list => list.id === parseInt(listId));
-  //     if (listIndex !== -1) {
-  //       this.lists[listIndex] = {
-  //         ...this.lists[listIndex],
-  //         ...response.list
-  //       };
-  //     } else {
-  //       this.lists.push(response.list);
-  //     }
-      
-  //     return response.list;
-  //   } catch (error) {
-  //     console.error(`Error al obtener detalle de lista ${listId}:`, error);
-  //     throw error;
-  //   }
-  // }
   
   // Crear una nueva lista
   async createList(name) {
