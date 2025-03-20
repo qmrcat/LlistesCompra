@@ -36,6 +36,9 @@ export class ItemViewController {
     });
   }
   
+
+
+
   // Renderizar todos los ítems
   renderItems(items) {
     if (items.length === 0) {
@@ -74,12 +77,19 @@ export class ItemViewController {
       this.addItemToView(item, false);
     });
   }
+
+
+
   
   // Añadir un ítem a la vista
   addItemToView(item, prepend = true) {
+      console.log("🚀 ~ ItemViewController ~ addItemToView ~ item:", item)
   
 
-    const votingActive = true;
+    // const votingActive = true;
+    const votingActive = item.activateVotingList
+
+    let votingSection = '';
 
     // Eliminar mensaje de "no hay ítems" si existe
     if (this.itemsContainer.querySelector('.text-center')) {
@@ -102,7 +112,7 @@ export class ItemViewController {
     
     // Preparar notas (si existen)
     const notesHtml = item.notes ? `
-      <div  class="edit-notes-text text-xs text-gray-600 py-1 me-36 rounded cursor-pointer"
+      <div  class="edit-notes-text text-xs text-gray-600 py-1 me-10 lg:me-36 rounded cursor-pointer"
             aria-label="Modificar la nota" data-microtip-position="top" data-microtip-size="medium"  role="tooltip"
       >
         <span>${truncateText(item.notes, 100)}</span>
@@ -149,36 +159,38 @@ export class ItemViewController {
       </div>
     ` : '';
 
-    const disabledVoteUP = item.userVote === 'up' ? 'disabled' : '';
-    const disabledVoteDown = item.userVote === 'down' ? 'disabled' : '';
+    if(votingActive){
+      const disabledVoteUP = item.userVote === 'up' ? 'disabled' : '';
+      const disabledVoteDown = item.userVote === 'down' ? 'disabled' : '';
 
-    const votingSection = `
-        <!-- Icones de valoració parcialment fora del div -->
-        <div class="container-vote-item absolute -bottom-4 left-6 flex space-x-3">
-            <!-- Polze amunt amb comptador -->
-            <div class="flex items-center">
-              <button 
-                class="vote-up w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center shadow-md hover:bg-green-600 cursor-pointer disabled:bg-gray-200 disabled:cursor-not-allowed"
-                ${disabledVoteUP}
-              >
-                <i class="fas fa-thumbs-up text-xs"></i>
-              </button>
-              <span class="vote-up-count ml-1 bg-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">${item.upVotes}</span>
-            </div>
-            
-            <!-- Polze avall amb comptador -->
-            <div class="flex items-center">
-              <button 
-                class="vote-down w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md hover:bg-red-600 cursor-pointer disabled:bg-gray-200 disabled:cursor-not-allowed"
-                ${disabledVoteDown}
-              >
-                <i class="fas fa-thumbs-down text-xs"></i>
-              </button>
-              <span class="vote-down-count ml-1 bg-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">${item.downVotes}</span>
+      votingSection = `
+          <!-- Icones de valoració parcialment fora del div -->
+          <div class="container-vote-item absolute -bottom-4 left-6 flex space-x-3">
+              <!-- Polze amunt amb comptador -->
+              <div class="flex items-center">
+                <button 
+                  class="vote-up w-6 h-6 rounded-full bg-green-500 text-white flex items-center justify-center shadow-md hover:bg-green-600 cursor-pointer disabled:bg-gray-200 disabled:cursor-not-allowed"
+                  ${disabledVoteUP}
+                >
+                  <i class="fas fa-thumbs-up text-xs"></i>
+                </button>
+                <span class="vote-up-count ml-1 bg-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">${item.upVotes||0}</span>
+              </div>
+              
+              <!-- Polze avall amb comptador -->
+              <div class="flex items-center">
+                <button 
+                  class="vote-down w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center shadow-md hover:bg-red-600 cursor-pointer disabled:bg-gray-200 disabled:cursor-not-allowed"
+                  ${disabledVoteDown}
+                >
+                  <i class="fas fa-thumbs-down text-xs"></i>
+                </button>
+                <span class="vote-down-count ml-1 bg-white px-2 py-0.5 rounded-full text-xs font-bold shadow-sm">${item.downVotes||0}</span>
+              </div>
             </div>
           </div>
-        </div>
-    `
+      `
+    }
 
     if (typeof item.quantity === 'string') item.quantity = parseFloat(item.quantity);
     const itemQuantity = item.quantity.toFixed(3).replace('.', ',')
@@ -232,7 +244,7 @@ export class ItemViewController {
     
 
     // Añadir eventos para cada elemento
-    this.addItemEvents(itemElement, item, canEdit);
+    this.addItemEvents(itemElement, item, canEdit, votingActive);
 
         // Añadir al contenedor (al principio o al final)
     // En el estilo WhatsApp, los nuevos ítems siempre van al final (abajo)
@@ -257,6 +269,8 @@ export class ItemViewController {
     if (itemElement) {
       // Determinar si el usuario puede editar este ítem
       const canEdit = this.itemManager.canUserEditItem(item);
+
+      const votingActive = item.activateVotingList
       
       // Actualizar estado completado
       if (item.completed) {
@@ -320,7 +334,7 @@ export class ItemViewController {
           const menuElement = tempDiv.firstChild;
           
           quantityControl.parentNode.appendChild(menuElement);
-          this.addItemEvents(itemElement, item, canEdit);
+          this.addItemEvents(itemElement, item, canEdit, votingActive);
         }
       }
       
@@ -384,146 +398,155 @@ export class ItemViewController {
     }
   }
 
-// Añadir eventos a un elemento de ítem
-addItemEvents(itemElement, item, canEdit) {
-  // Botón para alternar completado
-  const toggleCompletedBtn = itemElement.querySelector('.toggle-completed');
-  toggleCompletedBtn.addEventListener('click', () => {
-    this.itemManager.toggleItemCompleted(item.id);
-  });
-  
-  
-  const editNameText = itemElement.querySelector('.edit-name-text');
-
-  // Botones de cantidad
-  const increaseBtn = itemElement.querySelector('.increase-quantity');
-  const decreaseBtn = itemElement.querySelector('.decrease-quantity');
-
-  //Qunatitat
-  const quantityValue = itemElement.querySelector('.quantity-value');
-  const typesUnits = itemElement.querySelector('.types-units');
-
-  const voteUp = itemElement.querySelector('.vote-up');
-  const voteDown = itemElement.querySelector('.vote-down');
-
-  // const btnXatItem = itemElement.querySelector('.btn-xat-item');
-
-// XAT PRODUCTES
-
-// Botón de chat
-const chatButton = itemElement.querySelector('.chat-button');
-const messageBadge = chatButton.querySelector('.message-badge');
-
-chatButton.addEventListener('click', () => {
-  this.openChat(item);
-});
-
-// Suscribirse a actualizaciones de contador de mensajes no leídos
-import('../utils/messageService.js').then(messageService => {
-  const unsubscribe = messageService.subscribeToUnreadCount(item.id, (count) => {
-    if (count > 0) {
-      messageBadge.textContent = count > 9 ? '9+' : count;
-      messageBadge.classList.remove('hidden');
-      // messageBadge.classList.add('flex');
-    } else {
-      messageBadge.classList.add('hidden');
-      // messageBadge.classList.remove('flex');
-    }
-  });
-  
-  // Almacenar función para cancelar suscripción (se podría usar para limpiar)
-  itemElement.dataset.unsubscribeMessages = true;
-});
-
-// FI XAT PRODUCTES
-  
-  editNameText.addEventListener('click', () => {
-    this.showEditNameText(item);
-  });
-  
-  
-  increaseBtn.addEventListener('click', () => {
-    this.itemManager.increaseItemQuantity(item.id);
-  });
-  
-  decreaseBtn.addEventListener('click', () => {
-    if (item.quantity > 0) {
-      this.itemManager.decreaseItemQuantity(item.id);
-    }
-  });
-
-  quantityValue.addEventListener('click', () => {
-    this.showEditQuantityModal(item)
-    
-  });
-  typesUnits.addEventListener('click', () => {
-    this.showEditTypesUnitsModal(item)
-    
-  });
-
-  // btnXatItem.addEventListener('click', () => {
-  //   this.showXatItem(item)    
-  // });
-
-  // VOTACIONS
-  voteUp.addEventListener('click', () => {
-    this.votingAcction(item, 'up')
-  });
-
-  voteDown.addEventListener('click', () => {
-    this.votingAcction(item, 'down')
-  });
-
-  if (item.notes){
-    const editNotesText = itemElement.querySelector('div.edit-notes-text');
-    if (editNotesText) {
-    editNotesText.addEventListener('click', () => {
-      this.showEditNotesModal(item);
+  // Añadir eventos a un elemento de ítem
+  addItemEvents(itemElement, item, canEdit, votingActive) {
+    // Botón para alternar completado
+    const toggleCompletedBtn = itemElement.querySelector('.toggle-completed');
+    toggleCompletedBtn.addEventListener('click', () => {
+      this.itemManager.toggleItemCompleted(item.id);
     });
-    }
-  }
-  
-  // Solo añadir eventos de edición si el usuario tiene permisos
-  if (canEdit) {
-    // Menú desplegable
-    const menuBtn = itemElement.querySelector('.item-menu');
-    const dropdownMenu = itemElement.querySelector('.dropdown-menu');
     
-    if (menuBtn && dropdownMenu) {
-      menuBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('hidden');
-        
-        // Cerrar al hacer clic fuera
-        const closeDropdown = () => {
-          dropdownMenu.classList.add('hidden');
-          document.removeEventListener('click', closeDropdown);
-        };
-        
-        // Añadir listener con pequeño delay para evitar que se cierre inmediatamente
-        setTimeout(() => {
-          document.addEventListener('click', closeDropdown);
-        }, 0);
+    
+    const editNameText = itemElement.querySelector('.edit-name-text');
+
+    // Botones de cantidad
+    const increaseBtn = itemElement.querySelector('.increase-quantity');
+    const decreaseBtn = itemElement.querySelector('.decrease-quantity');
+
+    //Qunatitat
+    const quantityValue = itemElement.querySelector('.quantity-value');
+    const typesUnits = itemElement.querySelector('.types-units');
+
+    let voteUp = null
+    let voteDown = null
+
+    if(votingActive){
+      voteUp = itemElement.querySelector('.vote-up');
+      voteDown = itemElement.querySelector('.vote-down');
+    }
+
+    // const btnXatItem = itemElement.querySelector('.btn-xat-item');
+
+    // XAT PRODUCTES
+
+    // Botón de chat
+    const chatButton = itemElement.querySelector('.chat-button');
+    const messageBadge = chatButton.querySelector('.message-badge');
+
+    chatButton.addEventListener('click', () => {
+      this.openChat(item);
+    });
+
+    // Suscribirse a actualizaciones de contador de mensajes no leídos
+    import('../utils/messageService.js').then(messageService => {
+      const unsubscribe = messageService.subscribeToUnreadCount(item.id, (count) => {
+        if (count > 0) {
+          messageBadge.textContent = count > 9 ? '9+' : count;
+          messageBadge.classList.remove('hidden');
+          // messageBadge.classList.add('flex');
+        } else {
+          messageBadge.classList.add('hidden');
+          // messageBadge.classList.remove('flex');
+        }
       });
       
-      // Botón de editar notas
-      const editNotesBtn = itemElement.querySelector('.edit-notes');
-      if (editNotesBtn) {
-        editNotesBtn.addEventListener('click', () => {
-          this.showEditNotesModal(item);
-        });
+      // Almacenar función para cancelar suscripción (se podría usar para limpiar)
+      itemElement.dataset.unsubscribeMessages = true;
+    });
+
+    // FI XAT PRODUCTES
+    
+    editNameText.addEventListener('click', () => {
+      this.showEditNameText(item);
+    });
+    
+    
+    increaseBtn.addEventListener('click', () => {
+      this.itemManager.increaseItemQuantity(item.id);
+    });
+    
+    decreaseBtn.addEventListener('click', () => {
+      if (item.quantity > 0) {
+        this.itemManager.decreaseItemQuantity(item.id);
       }
+    });
+
+    quantityValue.addEventListener('click', () => {
+      this.showEditQuantityModal(item)
       
-      // Botón de eliminar ítem
-      const deleteItemBtn = itemElement.querySelector('.delete-item');
-      if (deleteItemBtn) {
-        deleteItemBtn.addEventListener('click', () => {
-          this.showDeleteConfirmationModal(item);
+    });
+    typesUnits.addEventListener('click', () => {
+      this.showEditTypesUnitsModal(item)
+      
+    });
+
+    // btnXatItem.addEventListener('click', () => {
+    //   this.showXatItem(item)    
+    // });
+
+    // VOTACIONS
+    if(votingActive){
+      voteUp.addEventListener('click', () => {
+        this.votingAcction(item, 'up')
+      });
+
+      voteDown.addEventListener('click', () => {
+        this.votingAcction(item, 'down')
+      });
+    }
+
+    if (item.notes){
+      const editNotesText = itemElement.querySelector('div.edit-notes-text');
+      if (editNotesText) {
+      editNotesText.addEventListener('click', () => {
+        this.showEditNotesModal(item);
+      });
+      }
+    }
+    
+    // Solo añadir eventos de edición si el usuario tiene permisos
+    if (canEdit) {
+      // Menú desplegable
+      const menuBtn = itemElement.querySelector('.item-menu');
+      const dropdownMenu = itemElement.querySelector('.dropdown-menu');
+      
+      if (menuBtn && dropdownMenu) {
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdownMenu.classList.toggle('hidden');
+          
+          // Cerrar al hacer clic fuera
+          const closeDropdown = () => {
+            dropdownMenu.classList.add('hidden');
+            document.removeEventListener('click', closeDropdown);
+          };
+          
+          // Añadir listener con pequeño delay para evitar que se cierre inmediatamente
+          setTimeout(() => {
+            document.addEventListener('click', closeDropdown);
+          }, 0);
         });
+        
+        // Botón de editar notas
+        const editNotesBtn = itemElement.querySelector('.edit-notes');
+        if (editNotesBtn) {
+          editNotesBtn.addEventListener('click', () => {
+            this.showEditNotesModal(item);
+          });
+        }
+        
+        // Botón de eliminar ítem
+        const deleteItemBtn = itemElement.querySelector('.delete-item');
+        if (deleteItemBtn) {
+          deleteItemBtn.addEventListener('click', () => {
+            this.showDeleteConfirmationModal(item);
+          });
+        }
       }
     }
   }
-}
+
+
 
   // Abrir el chat para un ítem
   openChat(item) {

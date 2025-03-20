@@ -6,6 +6,7 @@ import { ListManager } from './lists/listManager.js';
 import { ListViewController } from './lists/listView.js';
 import { ItemManager } from './items/itemManager.js';
 import { setupWebSocket } from './utils/websocket.js';
+import { sendChatMessageAutomatic } from './ui/chatComponent.js';
 
 // Elementos del DOM
 const authContainer = document.getElementById('auth-container');
@@ -37,6 +38,7 @@ export let aliasUsuari = null;
 // Obrir chat de la llista
 function openChatList(listId) {
   import('./ui/chatComponent.js').then(module => {
+    
     module.openChatModal(listId, true);
   });
 }
@@ -154,15 +156,29 @@ function setupEventListeners() {
 
   // Botón de refrescar ítems
   document.getElementById('btn-refresh-items').addEventListener('click', () => {
-    if (currentListId && itemManager) {
-      showNotification('Actualitzant ítems...', 'info');
-      itemManager.loadItems().then(() => {
-        showNotification('Ítems actualitzats', 'success');
-      }).catch(() => {
-        showNotification('Error al actualitzar els ítems', 'error');
-      });
-    }
+    // if (currentListId && itemManager) {
+    //   showNotification('Actualitzant ítems...', 'info');
+    //   itemManager.loadItems().then(() => {
+    //     showNotification('Ítems actualitzats', 'success');
+    //   }).catch(() => {
+    //     showNotification('Error al actualitzar els ítems', 'error');
+    //   });
+    // }
+    refreshItems()
   });
+
+
+function refreshItems() {
+  if (currentListId && itemManager) {
+    showNotification('Actualitzant ítems...', 'info');
+    itemManager.loadItems().then(() => {
+      showNotification('Ítems actualitzats', 'success');
+    }).catch(() => {
+      showNotification('Error al actualitzar els ítems', 'error');
+    });
+  }
+}
+
 
 // Mostrar modal de perfil
 function showProfileModal() {
@@ -386,12 +402,18 @@ async function showListConfigModal(listId) {
         <h2 class="text-xl font-bold mb-4">Configuració de la llista</h2>
         
         <div class="mb-4">
-          <label for="list-name" class="block text-sm font-medium text-gray-700 mb-1">Nom de la llista</label>
+          <label for="list-name-input" class="block text-sm font-medium text-gray-700 mb-1">Nom de la llista</label>
           <input 
             type="text" 
-            id="list-name" 
+            id="list-name-input" 
+            name="list-name-input" 
             class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
             value="${listDetails.name}"
+          >
+          <input  type="hidden" 
+                  id="list-name-input-old" 
+                  name="list-name-input-old" 
+                  value="${listDetails.name}" 
           >
         </div>
         <!-- Checkbox amb Toggle Switch -->
@@ -401,7 +423,22 @@ async function showListConfigModal(listId) {
             <div id="checkbox-voting" class="flex items-center space-x-3 cursor-pointer">
               <div id="toggle-voting" class="relative w-10 h-6 bg-gray-300 rounded-full transition-colors duration-300">
                 <div id="toggle-circle-voting" class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-300"></div>
-                <input type="hidden" id="activate-voting" name="activate-voting" value="${listDetails.activateVoting}" ${disabledVoting}>
+                <input  type="hidden" 
+                        id="activate-voting" 
+                        name="activate-voting" 
+                        value="${listDetails.activateVoting ? 1 : 0}" 
+                        valueOld="${listDetails.activateVoting ? 1 : 0}" 
+                >
+                <input  type="hidden" 
+                        id="activate-voting-old" 
+                        name="activate-voting-old" 
+                        value="${listDetails.activateVoting ? 1 : 0}" 
+                >
+                <input  type="hidden" 
+                        id="activate-locked" 
+                        name="activate-locked" 
+                        value="${disabledVoting}" 
+                >
               </div>
               <span id="status-voting" class="text-gray-700 text-sm">Desactivat</span>
             </div>
@@ -456,6 +493,7 @@ async function showListConfigModal(listId) {
             <input 
               type="email" 
               id="invite-email" 
+              name="invite-email" 
               class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
               placeholder="Correu electrònic"
             >
@@ -495,7 +533,23 @@ async function showListConfigModal(listId) {
     // Mostrar el modal actualizado
     showModal(modalContent, () => {
       document.getElementById('btn-cancel-config').addEventListener('click', closeModal);
-      document.getElementById('btn-save-config').addEventListener('click', () => updateListConfig(listId));
+      document.getElementById('btn-save-config').addEventListener('click', () => {
+
+          const nameInput = document.getElementById('list-name-input');
+
+          const nameInputOld = document.getElementById('list-name-input-old');
+                    
+          const newName = nameInput.value.trim();
+          const nameOld = nameInputOld.value.trim();
+          const activateVoting = document.getElementById('activate-voting').value
+          const activateVotingOld = document.getElementById('activate-voting-old').value
+          
+          if (!newName) {
+            showNotification('El nom de la llista no pot estar buit', 'error');
+            return;
+          }
+          updateListConfig(listId, newName, activateVoting, nameOld, activateVotingOld)
+      });
       document.getElementById('btn-send-invite').addEventListener('click', () => sendInvitation(listId));
 
       
@@ -506,45 +560,79 @@ async function showListConfigModal(listId) {
       const descriptionVoting = document.getElementById('description-voting');
       
       const activateVoting = document.getElementById('activate-voting');
+      const activateLocked = document.getElementById('activate-locked');
 
       // Valor inicial
       let isCheckedVoting = activateVoting.value === '1';
+          // Variable per controlar si el checkbox està bloquejat. disabled
+      let isLocked = activateLocked.value === 'disabled';
 
           // Funció per obtenir el valor (0 o 1)
-    function getValueVoting() {
-      return isCheckedVoting ? 1 : 0;
-    }
-    
-    // Funció per actualitzar la UI
-    function updateUIVoting() {
-        const value = getValueVoting();
+      function getValueVoting() {
+        return isCheckedVoting ? 1 : 0;
+      }
+     
+      
+      // Funció per actualitzar la UI
+      function updateUIVoting() {
+          const value = getValueVoting();
+          
+          // Actualitzar l'estat visual
+          if (isCheckedVoting ) {
+            toggleVoting.classList.remove('bg-gray-300');
+            toggleVoting.classList.add('bg-blue-500');
+            toggleCircleVoting.classList.add('transform', 'translate-x-4');
+            statusTextVoting.textContent = 'Activat';
+            descriptionVoting.textContent = 'Desmarca aquesta casella per desactivar la votació d\'ítems en aquesta llista.';
+          } else {
+            toggleVoting.classList.remove('bg-blue-500');
+            toggleVoting.classList.add('bg-gray-300');
+            toggleCircleVoting.classList.remove('transform', 'translate-x-4');
+            statusTextVoting.textContent = 'Desactivat';
+            descriptionVoting.textContent = isLocked  ? 'Aquesta opció no es pot modificar actualment, necessites almenys 2 participants.' 
+                                                      : 'Marca aquesta casella per activar la votació d\'ítems en aquesta llista.';
+          }
+
+          // Aplicar estil de bloquejat si és necessari
+          if (isLocked) {
+            checkboxVoting.classList.add('opacity-50', 'cursor-not-allowed');
+            checkboxVoting.classList.remove('cursor-pointer');
+          } else {
+            checkboxVoting.classList.remove('opacity-50', 'cursor-not-allowed');
+            checkboxVoting.classList.add('cursor-pointer');
+          }
+          
+          // Actualitzar el valor del camp ocult
+          activateVoting.value = value;
+          
+          return value;
+      }
+
+      // Funció per bloquejar/desbloquejar el checkbox
+      function lockCheckboxVoting(lock = true) {
+        isLocked = lock;
         
-        // Actualitzar l'estat visual
-        if (isCheckedVoting ) {
-          toggleVoting.classList.remove('bg-gray-300');
-          toggleVoting.classList.add('bg-blue-500');
-          toggleCircleVoting.classList.add('transform', 'translate-x-4');
-          statusTextVoting.textContent = 'Activat';
-          descriptionVoting.textContent = 'Desmarca aquesta casella per desactivar la votació d\'ítems en aquesta llista.';
-        } else {
-          toggleVoting.classList.remove('bg-blue-500');
-          toggleVoting.classList.add('bg-gray-300');
-          toggleCircleVoting.classList.remove('transform', 'translate-x-4');
-          statusTextVoting.textContent = 'Desactivat';
-          descriptionVoting.textContent = 'Marca aquesta casella per activar la votació d\'ítems en aquesta llista.';
+        // Si estem bloquejant, assegurem-nos que estigui desactivat
+        if (lock && isChecked) {
+          isChecked = false;
         }
         
-        // Actualitzar el valor del camp ocult
-        activateVoting.value = value;
-        
-        return value;
+        updateUIVoting();
       }
 
       // Event listener per al checkbox
-      activateVoting.addEventListener('click', function() {
+      checkboxVoting.addEventListener('click', function() {
+        // Si està bloquejat, mostrar missatge i no canviar l'estat
+        if (isLocked) {
+          // Crear i mostrar tooltip amb missatge
+          // showLockedMessage();
+          return;
+        }
         isCheckedVoting = !isCheckedVoting;
         updateUIVoting();
       });
+
+      
 
       // Añadir evento para abandonar la lista si no es propietario
       const leaveListBtn = document.getElementById('btn-leave-list');
@@ -602,6 +690,7 @@ async function showListConfigModal(listId) {
           }
         });
       });
+      updateUIVoting();
     });
   } catch (error) {
     console.error('Error al obtener detalles de la lista:', error);
@@ -612,33 +701,47 @@ async function showListConfigModal(listId) {
 
 
 // Actualizar configuración de lista
-async function updateListConfig(listId) {
-  const nameInput = document.getElementById('list-name');
-  const newName = nameInput.value.trim();
-  const activateVoting = document.getElementById('activate-voting').value;
-  
-  if (!newName) {
-    showNotification('El nom de la llista no pot estar buit', 'error');
-    return;
-  }
-  
+async function updateListConfig(listId, name, activateVoting, nameInputOld, activateVotingOld) {
   try {
     // Implementar llamada a API para actualizar el nombre de la lista
-    await listManager.updateList(listId, { name: newName,  activateVoting});
-    
-    // Actualizar UI
-    document.getElementById('list-name').textContent = newName;
+    await listManager.updateList(listId, { name,  activateVoting});
     
     closeModal();
     showNotification('Llista actualitzada correctament', 'success');
     
     // Recargar listas
     await listViewController.loadLists();
+    let messatge = ''
+    let messatgeVoting = ''
+
+
+    if (nameInputOld.trim() !== name.trim()) {
+      sendChatMessageAutomatic(listId, true, 'list', `El nom de la llista ha canviat a: ${name}`)
+    }
+
+    if (activateVoting === '0' && activateVotingOld === '1') {
+      document.querySelectorAll('.container-vote-item').forEach(el => el.remove());
+      const containers = document.querySelectorAll('.item-container');
+      
+      // Elimina la classe 'mb-4' de cada div
+      containers.forEach(container => { container.classList.remove('mb-4') })
+      sendChatMessageAutomatic(listId, true, 'list', `La votació ha estat desactivada a la llista`)
+    } else {
+      if (activateVoting === '1' && activateVotingOld === '0') {
+        refreshItems()
+        sendChatMessageAutomatic(listId, true, 'list', `La votació ha estat activada a la llista`)
+      }
+    }
+    
+
   } catch (error) {
     console.error('Error al actualizar lista:', error);
     showNotification('Error al actualitzar la llista', 'error');
   }
 }
+
+
+
 
 // Enviar invitación a la lista
 async function sendInvitation(listId) {
@@ -659,6 +762,8 @@ async function sendInvitation(listId) {
     showNotification('Error al enviar la invitació', 'error');
   }
 }
+
+
 
 // Mostrar modal de confirmación para rechazar invitación
 async function confirmRejectInvitation(token) {
@@ -718,6 +823,8 @@ async function confirmRejectInvitation(token) {
   }
 }
 
+
+
 // Abrir detalle de lista
 export function openListDetail(listId) {
   currentListId = listId;
@@ -755,6 +862,8 @@ function closeModal() {
   modalContainer.innerHTML = '';
 }
 
+
+
 // Mostrar modal
 function showModal(content, setupCallback) {
   const modalContainer = document.getElementById('modal-container');
@@ -772,16 +881,22 @@ function showModal(content, setupCallback) {
   }
 }
 
+
+
 // Cerrar sesión
 function handleLogout() {
   logout();
   redirectToLogin();
 }
 
+
+
 // Redirigir a la página de login
 function redirectToLogin() {
   window.location.href = 'login.html';
 }
+
+
 
 // Exportar funciones y variables globales necesarias
 export {

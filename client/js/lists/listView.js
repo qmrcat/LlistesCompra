@@ -6,10 +6,13 @@ export class ListViewController {
   constructor(listManager) {
     this.listManager = listManager;
     this.listsGrid = document.getElementById('lists-grid');
-  }
+}
   
+
+
   // Cargar y mostrar las listas
-async loadLists() {
+  async loadLists() {
+    console.log('Cargando listas...');
     try {
       // Mostrar indicador de carga
       this.listsGrid.innerHTML = `
@@ -182,6 +185,8 @@ async loadLists() {
   
   // Renderizar listas
   renderLists(lists) {
+    console.log('Renderizando listas...');
+    console.log("🚀 ~ ListViewController ~ renderLists ~ lists:", lists)
     this.listsGrid.innerHTML = '';
     
     lists.forEach(list => {

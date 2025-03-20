@@ -17,7 +17,10 @@ export function openChatModal(item, isList = false) {
         existingModal = document.getElementById(`chat-modal-${item.id}`);
     }else{
         existingModal = document.getElementById(`chat-modal-list`);
+        document.querySelector('.message-badge-list').textContent = '';
+        document.querySelector('.message-badge-list').classList.add('hidden');;
     }
+
     if (existingModal) return;
 
     const nameInput = document.getElementById('list-name');
@@ -332,5 +335,50 @@ async function sendChatMessage(itemId, isList = false) {
     
     // Rehabilitar input en caso de error
     inputElement.disabled = false;
+  }
+}
+
+
+/**
+ * Envía un mensaje en el chat
+ * @param {number} itemId - ID del ítem, si es una lista (isList=true) se pasa el valor 'listId'
+ * @param {boolean} isList - per defecte false, si es true es una llista
+ * @param {string} tipusXat - tipus de xat, per defecte 'item'
+ * @param {string} messatge - missatge a enviar, per defecte ''
+ */
+export async function sendChatMessageAutomatic(itemListId, isList = false, tipusXat = 'item', messatge = '') {
+
+  // let inputElement
+  ///const tipusXat = document.getElementById('tipusXat').value;
+  
+  // if (tipusXat === 'item'){
+  //   inputElement = document.getElementById(`chat-input-${itemId}`);
+  // }else{
+  //   inputElement = document.getElementById(`chat-input-list`);
+  // } 
+
+  const content = messatge.trim();
+  
+  if (!content) return;
+  
+  try {
+    // // Desactivar input mientras se envía
+    // inputElement.disabled = true;
+    
+    // Enviar mensaje
+    await sendMessage(itemListId, content, (tipusXat === 'list'));
+    
+    // // Limpiar input
+    // inputElement.value = '';
+    
+    // // Rehabilitar input
+    // inputElement.disabled = false;
+    // inputElement.focus();
+  } catch (error) {
+    console.error(`Error al enviar mensaje para el ítem/list ${itemId}:`, error);
+    showNotification('Error al enviar el missatge', 'error');
+    
+    // // Rehabilitar input en caso de error
+    // inputElement.disabled = false;
   }
 }

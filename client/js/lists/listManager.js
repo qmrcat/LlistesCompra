@@ -112,9 +112,16 @@ async fetchListDetail(listId) {
   
   // Actualizar una lista
   async updateList(listId, data) {
+    console.log("🚀 ~ ListManager ~ updateList ~ data:", data)
+    console.log(`Actualizando lista ${listId}...`);
     try {
       const response = await makeApiRequest(`/api/lists/${listId}`, 'PUT', data);
       
+      console.log("🚀 ~ ListManager ~ updateList ~ response:", response)
+      if (response.success) {
+       // { name,  activateVoting}
+          this.updateListInMemory(listId, data);
+      }
       // Actualizar la lista en el array local
       const listIndex = this.lists.findIndex(list => list.id === parseInt(listId));
       if (listIndex !== -1) {
@@ -130,6 +137,15 @@ async fetchListDetail(listId) {
       throw error;
     }
   }
+
+  updateListInMemory(listId, data) {
+
+    console.log("🚀 ~ after ListManager ~ updateListInMemory ~ this.lists:", this.lists)
+    this.lists[name] = data[name];
+    this.lists[activateVoting] = data[activateVoting];
+    console.log("🚀 ~ before ListManager ~ updateListInMemory ~ this.lists:", this.lists)
+
+  } 
 
     // Cancelar una invitación
     async cancelInvitation(invitationId) {

@@ -87,7 +87,8 @@ const getUserLists = async (req, res) => {
         role,
         lastItemAddedAt: list.lastItemAddedAt,
         lastItemId: list.lastItemId,
-        createdAt: list.createdAt
+        createdAt: list.createdAt,
+        activateVoting: list.activateVoting,
       };
     });
 
@@ -319,7 +320,8 @@ const getListDetail = async (req, res) => {
           typesUnits: item.typesUnits,
           upVotes: voteCounts[item.id].upVotes,
           downVotes: voteCounts[item.id].downVotes,
-          userVote: userVoteMap[item.id] || null
+          userVote: userVoteMap[item.id] || null,
+          activateVotingList: list.activateVoting
         })),
         pendingInvitations: list.Invitations ? list.Invitations.map(invitation => ({
           id: invitation.id,
@@ -996,7 +998,8 @@ const getListById = async (listId, section = 'all') => {
         participants,
         items,
         pendingInvitations,
-        participantCount: participants.length
+        participantCount: participants.length,
+        activateVoting: list.activateVoting,
       };
       
       return formattedList;
