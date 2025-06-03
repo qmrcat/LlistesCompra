@@ -28,42 +28,6 @@ export function setupWebSocket() {
     }
   });
 
-  //   // Guardar els tipus d'esdeveniments registrats
-  //   const registeredEvents = new Set();
-  
-  //   // Afegir un listener per a tots els esdeveniments
-  //   socket.onAny((eventName, ...args) => {
-  //     if (!registeredEvents.has(eventName)) {
-  //       console.warn(`Esdeveniment no registrat rebut: ${eventName}`, args[0]);
-  //       // Pots afegir aquí la lògica per gestionar esdeveniments desconeguts
-  //     }
-  //   });
-
-  // // Capturar el typus de missatge
-  //   // Guardar la referència original al mètode 'on' de socket.io
-  //   const originalOn = socket.on;
-  
-  //   // Sobreescriure el mètode 'on' per interceptar tots els tipus d'esdeveniments
-  //   socket.on = function(eventName, callback) {
-  //     // Interceptar l'esdeveniment original i afegir el nostre propi processament
-  //     return originalOn.call(this, eventName, function(...args) {
-  //       // Registrar o processar el tipus d'esdeveniment abans de la gestió
-  //       console.log(`Tipus d'esdeveniment rebut: ${eventName}`);
-        
-  //       // Aquí pots afegir qualsevol lògica per processar el tipus d'esdeveniment
-  //       if (eventName === 'item:added' || eventName === 'user:joined' || eventName === 'invitation:rejected') {
-  //         // Fes alguna cosa específica amb aquests tipus d'esdeveniments
-  //         console.log(`Esdeveniment important detectat: ${eventName}`, args[0]);
-  //         // Pots emmagatzemar-lo, processar-lo o fer qualsevol altra acció
-  //       }
-        
-  //       // Cridar al callback original amb els arguments originals
-  //       callback.apply(this, args);
-  //     });
-  //   };
-
-
-
   
   // Eventos del socket
   socket.on('connect', handleSocketConnect);
@@ -319,12 +283,7 @@ function handleMessagesDeleteList(data) {
 
 function handleVoteItem(data) { 
   //{ userId, itemId, voteType, countUp, countDown }
-  console.log("🚀 ~ handleVoteItem ~ data:", data)
-
   const { userId, itemId, voteType, countUp, countDown } = data;
-  console.log("🚀 ~ handleVoteItem ~ countDown:", countDown)
-  console.log("🚀 ~ handleVoteItem ~ countUp:", countUp)
-
   const currentUser = getLoggedUser();
 
   const voteElement = document.querySelector(`.item-container[data-item-id="${itemId}"]`);
@@ -481,7 +440,7 @@ function handleNewMessageList(data) {
   
   // Importar dinàmicament el servei de missatges per evitar dependències circulars
   import('./messageService.js').then(messageService => {
-    messageService.handleNewMessage(data, true);
+    messageService.handleNewMessageList(data, true);
   });
   
   // Si el modal de xat està obert per a aquest llista, actualitzeu la conversa
@@ -492,6 +451,8 @@ function handleNewMessageList(data) {
       // Actualitzar el xat dinàmicament
       updateChatWithNewMessage(chatContainer, data.message, true);
     }
+  } else {
+    console.log('No es troba el modal de xat de la llista');
   }
 }
 

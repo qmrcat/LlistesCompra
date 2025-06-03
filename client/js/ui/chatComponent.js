@@ -8,7 +8,7 @@ import { getLoggedUser } from '../auth/auth.js';
  * Crea el modal de chat para un ítem específico
  * @param {Object} item - Información del ítem
  */
-export function openChatModal(item, isList = false) {
+export async function openChatModal(item, isList = false) {
     if (!item) return;
     
     let existingModal;
@@ -17,9 +17,13 @@ export function openChatModal(item, isList = false) {
         existingModal = document.getElementById(`chat-modal-${item.id}`);
     }else{
         existingModal = document.getElementById(`chat-modal-list`);
-        document.querySelector('.message-badge-list').textContent = '';
-        document.querySelector('.message-badge-list').classList.add('hidden');;
+        const messageBadgeList = document.querySelector('.message-badge-list')
+        messageBadgeList.textContent = '';
+        messageBadgeList.classList.add('hidden');
+        await markMessagesAsRead(item, true);
+
     }
+        
 
     if (existingModal) return;
 
@@ -94,7 +98,6 @@ export function openChatModal(item, isList = false) {
       const btnCloseChat = document.getElementById('btn-close-chat')
 
       chatForm.addEventListener('submit', (e) => {
-        //console.log("🚀 ~ showModal chatForm.addEventListener ~ e:", e)
         e.preventDefault();
         const isList = (e.id === 'chat-form-list')
         sendChatMessage(itemId, isList);
@@ -200,7 +203,7 @@ async function loadChatMessages(itemId, isList = false) {
 
               messageElement.setAttribute("messageId", message.id); 
               messageElement.innerHTML = `
-                <div class="chat-bubble">
+                <div class="chat-bubble shadow">
                   ${!isOwnMessage ? `<span class="chat-sender">${message.sender.alias}</span>` : ''}
                   <p>${message.content}</p>
                   <div class="flex justify-between items-center mt-2">
@@ -240,8 +243,6 @@ async function loadChatMessages(itemId, isList = false) {
               if (deleteMessageBtn) {
                 deleteMessageBtn.addEventListener('click', async () => {
                   //this.showDeleteConfirmationModal(item);
-                  console.log("🚀 ~ loadChatMessages ~ deleteMessageBtn", deleteMessageBtn)
-                  console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
                   try {
                     // await this.itemManager.deleteItem(item.id);
                     await deleteMessageIndividual(messageElement.getAttribute("messageId"), isList)
@@ -256,8 +257,6 @@ async function loadChatMessages(itemId, isList = false) {
               if (deleteMessageTothomBtn) {
                 deleteMessageTothomBtn.addEventListener('click', async () => {
                   //this.showDeleteConfirmationModal(item);
-                  console.log("🚀 ~ loadChatMessages ~ deleteMessageTothomBtn", deleteMessageTothomBtn)
-                  console.log("🚀 ~ loadChatMessages ~ messageElement", messageElement.getAttribute("messageId"))
                   try {
                     // await this.itemManager.deleteItem(item.id);
                     await deleteMessageAll(messageElement.getAttribute("messageId"), isList)

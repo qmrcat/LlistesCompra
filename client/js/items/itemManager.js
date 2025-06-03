@@ -20,7 +20,6 @@ export class ItemManager {
       // Obtener detalle de la lista (incluye ítems)
       const response = await makeApiRequest(`/api/lists/listsItems/${this.listId}`, 'GET');
       
-      console.log("🚀 ~ ItemManager ~ loadItems ~ response:", response)
       // Guardar ítems y renderizar
       this.items = response.list.items || [];
             

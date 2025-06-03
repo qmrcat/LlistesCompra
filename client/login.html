@@ -4,14 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Iniciar Sessió - CompraJunts</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/images/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/favicon-16x16.png">
+  <link rel="manifest" href="./assets/images/site.webmanifest">
   <link href="./css/styles.css" rel="stylesheet">
   <!-- Iconos de Font Awesome (alternativa a @expo/vector-icons) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
-<body class="bg-background min-h-screen flex flex-col justify-center">
+<body class="bg-linear-to-r from-purple-500 via-indigo-500 to-blue-500 min-h-screen flex flex-col justify-center"> 
   <div class="container mx-auto px-4 py-8">
     <div class="max-w-md mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-      <div class="bg-primary text-white py-4 px-6 text-center">
+      <div class="bg-primary text-white py-4 px-6 text-center bg-linear-to-r from-emerald-500 via-teal-500 to-cyan-500">
         <h1 class="text-2xl font-bold">CompraJunts</h1>
         <p class="mt-1">Llistes de compra col·laboratives</p>
       </div>
@@ -54,10 +58,10 @@
             </div>
           </div>
           
-          <div>
+          <div><!-- class="w-full bg-primary hover:bg-blue-600 text-white py-2 px-4 rounded shadow transition" -->
             <button 
-              type="submit" 
-              class="w-full bg-primary hover:bg-blue-600 text-white py-2 px-4 rounded shadow transition"
+              type="submit"               
+              class="w-full py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition"
             >
               Iniciar Sessió
             </button>
@@ -127,7 +131,7 @@
           <div>
             <button 
               type="submit" 
-              class="w-full bg-primary hover:bg-blue-600 text-white py-2 px-4 rounded shadow transition"
+              class="w-full py-2 bg-blue-400 hover:bg-blue-600 text-white rounded shadow transition"
             >
               Registrar-se
             </button>

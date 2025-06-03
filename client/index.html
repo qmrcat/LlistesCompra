@@ -7,6 +7,10 @@
   
   <!-- Tailwind CSS -->
   <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/favicon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon/favicon-16x16.png">
+  <link rel="manifest" href="./assets/favicon/site.webmanifest">
   <link href="./css/styles.css" rel="stylesheet">
   <link href="./css/styles-client.css" rel="stylesheet">
   <link href="./css/microtip.css" rel="stylesheet">
@@ -14,11 +18,16 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   
 </head>
-<body class="bg-background min-h-screen">
+<!-- <body class="bg-background min-h-screen"> -->
+<body class="bg-stone-200 min-h-screen">
   <!-- Header -->
-  <header class="bg-sky-700 text-white shadow-md">
-    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-      <h1 class="text-2xl font-bold">CompraJunts</h1>
+  <header id="header-app" class="text-white shadow-md  px-4 pt-1 pb-2 text-center bg-linear-to-r from-emerald-500 via-teal-500 to-cyan-500">
+    <div class="container mx-auto px-4 flex justify-between items-center">
+      <div class="flex items-center">
+        <img src="./assets/images/logo.png" alt="CompraJunts" class="w-10">
+        <h1 class="text-2xl font-bold">CompraJunts</h1>
+      </div>
+      <!-- Menú de usuario -->
       <div id="user-menu" class="hidden">
         <div class="flex items-center space-x-4">
           <span id="user-alias" class="font-medium"></span>
@@ -85,7 +94,7 @@
             >
               <i class="fas fa-comments"></i>
               <span 
-                class="message-badge-list absolute top-0 right-0 w-6 h-6 transform translate-x-1/3 -translate-y-1/3 shadow-md bg-red-500 text-white rounded-full text-sm/6 flex items-center justify-center hidden"
+                class="message-badge-list qmr-class absolute top-0 right-0 w-6 h-6 transform translate-x-1/3 -translate-y-1/3 shadow-md bg-red-500 text-white rounded-full text-sm/6 flex items-center justify-center hidden"
               ></span>
             </button>
           </div>          
@@ -115,28 +124,30 @@
       <div class="bg-white border-t border-gray-200 p-3 shadow-lg flex-shrink-0">
         <!-- <form id="new-item-form" class="flex flex-col md:flex-row gap-2"> -->
         <form id="new-item-form" class="flex flex-row items-center gap-2">
-          <input 
-          type="text" 
-          id="new-item-name"
-          class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-          placeholder="Nom de l'ítem"
-          required
-          >
-          <div class="flex flex-row gap-2">
-            <input 
-              type="number" 
-              id="new-item-quantity" 
-              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-              value="1" 
-              min="1"
-            >
+          <div class="flex flex-col gap-2 w-full">
             <input 
               type="text" 
-              id="new-item-typesUnits" 
+              id="new-item-name"
               class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-              placeholder="Tipus d'unitat"
+              placeholder="Nom de l'ítem"
               required
             >
+            <div class="flex flex-row gap-2">
+              <input 
+                type="number" 
+                id="new-item-quantity" 
+                class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                value="1" 
+                min="1"
+              >
+              <input 
+                type="text" 
+                id="new-item-typesUnits" 
+                class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                placeholder="Tipus d'unitat"
+                required
+              >
+            </div>
           </div>
           <button 
             type="submit" 

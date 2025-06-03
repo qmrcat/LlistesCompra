@@ -1,5 +1,5 @@
 // Controlador de vista para las listas
-import { openListDetail } from '../app.js';
+import { openListDetail, openChatList } from '../app.js';
 import { showNotification } from '../ui/notification.js';
 
 export class ListViewController {
@@ -185,13 +185,12 @@ export class ListViewController {
   
   // Renderizar listas
   renderLists(lists) {
-    console.log('Renderizando listas...');
-    console.log("🚀 ~ ListViewController ~ renderLists ~ lists:", lists)
+    console.log('Renderitzan la llistas...');
     this.listsGrid.innerHTML = '';
     
     lists.forEach(list => {
       const card = document.createElement('div');
-      card.className = 'bg-slate-100 rounded-lg shadow-md p-4 list-card hover:shadow-lg transition-all cursor-pointer';
+      card.className = 'bg-slate-100 rounded-lg shadow-md p-4 list-card hover:shadow-lg transition-all';
       card.dataset.listId = list.id;
       
       // Determinar icono según rol
@@ -217,29 +216,72 @@ export class ListViewController {
         const timeAgo = this.listManager.formatTimeAgo(list.lastItemAddedAt);
         lastItemInfo = `Últim ítem afegit fa ${timeAgo}`;
       }
+
+      const buttonXatList = `
+         
+          <div class="relative">
+            <button class="chat-button-lists-list w-8 h-8 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-100 cursor-pointer relative" aria-label="Obrir el xat per aquesta llista" data-microtip-position="bottom-left" data-microtip-size="medium" role="tooltip">
+              <i class="fas fa-comments"></i>
+              <span class="message-badge-list-list absolute top-0 right-0 w-6 h-6 transform translate-x-1/3 -translate-y-1/3 shadow-md bg-red-500 text-white rounded-full text-sm/6 flex items-center justify-center hidden" 
+              data-badge-id="${list.id}"
+              ></span>
+            </button>
+          </div>
+
+      `
       
       card.innerHTML = `
-        <div class="flex justify-between items-start">
-          <h3 class="text-lg font-semibold">
-            ${list.name}
-            ${roleIcon}
-          </h3>
-          <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-            <i class="fas fa-users mr-1"></i>${list.participantCount || 1}
-          </span>
-        </div>
-        <p class="text-gray-500 text-sm mt-2">Creada el ${createdAt}</p>
-        <div class="mt-4 pt-4 border-t border-gray-100 text-sm text-gray-600">
-          ${lastItemInfo}
+        <div class="flex flex-col">
+            <div class="area-click-card cursor-pointer flex flex-col">
+              <div class="flex justify-between items-start">
+                <h3 class="text-lg font-semibold">
+                  ${list.name}
+                  ${roleIcon}
+                </h3>
+                <span class="text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  <i class="fas fa-users mr-1"></i>${list.participantCount || 1}
+                </span>
+                
+              </div>
+              <p class="text-gray-500 text-sm mt-2">Creada el ${createdAt}</p>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="area-click-card-info mt-2 pt-1 border-t border-gray-100 text-sm text-gray-600  cursor-pointer">
+                ${lastItemInfo}
+              </div>
+              <div class="mt-2 pt-1 me-3">
+                ${buttonXatList}  
+              </div>
+            </div>
         </div>
       `;
       
+
+      // chat-button-lists-list
+
       // Añadir evento de clic para abrir la lista
-      card.addEventListener('click', () => {
-        openListDetail(list.id);
-      });
+      // card.addEventListener('click', () => {
+      //   openListDetail(list.id);
+      // });
       
       this.listsGrid.appendChild(card);
+      const chatButtonListsList = card.querySelector('.chat-button-lists-list');
+      
+      const areaClickCard = card.querySelector('.area-click-card');
+      const areaClickCardInfo = card.querySelector('.area-click-card-info'); 
+
+      areaClickCard.addEventListener('click', () => {
+        openListDetail(list.id);
+      });
+      areaClickCardInfo.addEventListener('click', () => {
+        openListDetail(list.id);
+      });
+
+      chatButtonListsList.addEventListener('click', () => {
+        console.log('Abrir chat para la lista', list.id);
+        openChatList(list.id);
+
+      });
     });
   }
   

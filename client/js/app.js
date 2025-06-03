@@ -9,6 +9,7 @@ import { setupWebSocket } from './utils/websocket.js';
 import { sendChatMessageAutomatic } from './ui/chatComponent.js';
 
 // Elementos del DOM
+const headerApp = document.getElementById('header-app');
 const authContainer = document.getElementById('auth-container');
 const listsContainer = document.getElementById('lists-container');
 const listDetailContainer = document.getElementById('list-detail-container');
@@ -122,6 +123,7 @@ function setupEventListeners() {
   // Botón de volver a listas
   btnBackToLists.addEventListener('click', () => {
     listDetailContainer.classList.add('hidden');
+    headerApp.classList.remove('hidden');
     listsContainer.classList.remove('hidden');
     currentListId = null;
   });
@@ -392,7 +394,6 @@ async function showListConfigModal(listId) {
   try {
     // Obtener detalles completos de la lista para asegurar que tenemos los participantes
     const listDetails = await listManager.fetchListDetail(listId);
-    console.log("🚀 ~ showListConfigModal ~ listDetails:", listDetails)
 
     const disabledVoting = listDetails.participantCount < 2 ? 'disabled' : '';
     
@@ -830,17 +831,24 @@ export function openListDetail(listId) {
   currentListId = listId;
   
   // Ocultar lista de listas y mostrar detalle
+  headerApp.classList.add('hidden');
   listsContainer.classList.add('hidden');
   listDetailContainer.classList.remove('hidden');
   
   const list = listManager.getListById(listId);
+  localStorage.setItem('currentList', JSON.stringify(list));
   if (list) {
     // Actualizar UI con detalles de la lista
     document.getElementById('list-name').textContent = list.name;
     document.getElementById('list-participants').innerHTML = `
       <i class="fas fa-users mr-1"></i>${list.participantCount || 0}
     `;
+
+
+      // Cargar contadores de mensajes no leídos
+      listManager.loadUnreadMessageCountsList(listId);
     
+
     // Inicializar gestor de ítems para esta lista
     itemManager = new ItemManager(listId);
     
@@ -902,5 +910,6 @@ function redirectToLogin() {
 export {
   showModal,
   closeModal,
-  showNotification
+  showNotification,
+  openChatList
 };

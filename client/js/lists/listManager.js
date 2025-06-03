@@ -109,15 +109,26 @@ async fetchListDetail(listId) {
       throw error;
     }
   }
+
+  // Cargar contadores de mensajes no leídos
+  async loadUnreadMessageCountsList(listId) {
+  
+    try {
+      // Importar dinámicamente para evitar dependencias circulares
+      const messageService = await import('../utils/messageService.js');
+      await messageService.getUnreadMessageCountsList(listId, true);
+    } catch (error) {
+      console.error(`Error al cargar contadores de mensajes para la lista ${this.listId}:`, error);
+    }
+  }
+  
   
   // Actualizar una lista
   async updateList(listId, data) {
-    console.log("🚀 ~ ListManager ~ updateList ~ data:", data)
-    console.log(`Actualizando lista ${listId}...`);
+    console.log(`Actualizant la llista ${listId}...`);
     try {
       const response = await makeApiRequest(`/api/lists/${listId}`, 'PUT', data);
       
-      console.log("🚀 ~ ListManager ~ updateList ~ response:", response)
       if (response.success) {
        // { name,  activateVoting}
           this.updateListInMemory(listId, data);
@@ -140,10 +151,8 @@ async fetchListDetail(listId) {
 
   updateListInMemory(listId, data) {
 
-    console.log("🚀 ~ after ListManager ~ updateListInMemory ~ this.lists:", this.lists)
     this.lists[name] = data[name];
     this.lists[activateVoting] = data[activateVoting];
-    console.log("🚀 ~ before ListManager ~ updateListInMemory ~ this.lists:", this.lists)
 
   } 
 

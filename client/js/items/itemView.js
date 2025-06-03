@@ -83,8 +83,6 @@ export class ItemViewController {
   
   // Añadir un ítem a la vista
   addItemToView(item, prepend = true) {
-      console.log("🚀 ~ ItemViewController ~ addItemToView ~ item:", item)
-  
 
     // const votingActive = true;
     const votingActive = item.activateVotingList

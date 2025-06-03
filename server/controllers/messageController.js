@@ -356,7 +356,7 @@ const getUnreadMessageCount = async (req, res) => {
         const messages = await Message.findAll({
           where: { 
             listId,
-            inteId: null,
+            itemId: null,
             senderId: { [Op.ne]: userId } // Mensajes que no son del usuario actual
           },
           attributes: ['id', 'listId', 'readBy']
@@ -388,6 +388,7 @@ const markMessagesAsRead = async (req, res) => {
     const basePath = req.baseUrl + req.path;
     // Comprovar si la ruta conté '/list'
     const isList = fullPath.includes('/list/');
+    console.log("🚀 ~ markMessagesAsRead ~ isList:", isList)
     
     
     let itemId, listId
@@ -455,6 +456,7 @@ const markMessagesAsRead = async (req, res) => {
       const readBy = message.readBy || [];
       return !readBy.includes(userId);
     });
+    console.log("🚀 ~ markMessagesAsRead ~ unreadMessages:", unreadMessages)
 
 
     for (const message of unreadMessages) {

@@ -3,8 +3,8 @@ import { makeApiRequest } from './api.js';
 import { showNotification } from '../ui/notification.js';
 
 // Mapa para almacenar contadores de mensajes no leídos por ítem
-let unreadMessageCounts = {};
-let unreadMessageCountsList = {};
+export let unreadMessageCounts = {};
+export let unreadMessageCountsList = {};
 
 // Mapa para almacenar las funciones callback de notificación por ítem
 const messageCallbacks = {};
@@ -51,6 +51,7 @@ export async function sendMessage(itemId, content, isList = false) {
  * @returns {Promise<Object>} - Promesa con el resultado
  */
 export async function markMessagesAsRead(itemId, isList = false) {
+
   try {
     const response = !isList  ? await makeApiRequest(`/api/messages/read/item/${itemId}`, 'PUT') 
                               : await makeApiRequest(`/api/messages/read/list/${itemId}`, 'PUT')
@@ -81,80 +82,131 @@ export async function markMessagesAsRead(itemId, isList = false) {
  */
 export async function getUnreadMessageCounts(listId, isList = false) {
   try {
-    const response = !isList  ? await makeApiRequest(`/api/messages/unread/list/${listId}`, 'GET')
-                              : await makeApiRequest(`/api/messages/unread-list/${listId}`, 'GET')
-    if(isList){
-      unreadMessageCountsList = response.data || {};
-    } else {
-      unreadMessageCounts = response.data || {};
-    }
+    const response = !await makeApiRequest(`/api/messages/unread/list/${listId}`, 'GET') // tots els missatges dels items de la llista
+                      
+    unreadMessageCounts = response.data || {};
     
     // Notificar a todos los ítems registrados
-    if(isList){
-      Object.keys(unreadMessageCountsList).forEach(itemId => {
-         notifyUnreadCountChange(itemId, unreadMessageCountsList[itemId], isList);
-      });
-      return unreadMessageCountsList;
-    } else {
-      Object.keys(unreadMessageCounts).forEach(itemId => {
-          notifyUnreadCountChange(itemId, unreadMessageCounts[itemId], isList);
-      });
-      return unreadMessageCounts;
-    }
-    
+    Object.keys(unreadMessageCounts).forEach(listId => {
+          notifyUnreadCountChange(listId, unreadMessageCounts[listId], isList);
+    });
+
+    return unreadMessageCounts;
     
   } catch (error) {
-    console.error(`Error al obtener contadores de mensajes no leídos ${!isList ? 'per a la llista' : 'de la llista'}:`, error);
+    console.error(`Error al obtener contadores de mensajes no leídos de los items de la llista:`, error);
     throw error;
   }
 }
+
+
+/**
+ * Obtiene el contador de mensajes no leídos de una lista
+ * @param {number} listId - ID de la lista
+ * @returns {Promise<Object>} - Promesa con los contadores por ítem
+ */
+export async function getUnreadMessageCountsList(listId, isList = true) {
+  try {
+
+    const response = await makeApiRequest(`/api/messages/unread-list/${listId}`, 'GET')
+    response.data
+    
+    unreadMessageCountsList[listId] = response.data || {};
+    
+    // Notificar a todos los ítems registrados
+
+    Object.keys(unreadMessageCountsList).forEach(listId => {
+        notifyUnreadCountChange(listId, unreadMessageCountsList[listId], true);
+    });
+    return unreadMessageCountsList;    
+    
+  } catch (error) {
+    console.error(`Error al obtener contadores de mensajes no leídos de la llista:`, error);
+    throw error;
+  }
+}
+
 
 /**
  * Maneja la notificación de un nuevo mensaje recibido por WebSocket
  * @param {Object} data - Datos del mensaje
  */
 export function handleNewMessage(data, isList = false) {
-  
-  const { itemId, message } = data;
+  const { itemId, listId, message } = data;
+  // Incrementar contador si no es nuestro propio mensaje
+  const currentUser = JSON.parse(localStorage.getItem('user'));
+  if (currentUser && message.sender.id !== currentUser.id) {
+      const currentCount = unreadMessageCounts[itemId] || 0;
+      unreadMessageCounts[itemId] = currentCount + 1;
+      
+      // Notificar cambio en el contador
+      notifyUnreadCountChange(itemId, unreadMessageCounts[itemId], isList);
+
+      // Mostrar notificación si no estamos viendo el chat
+      if (!document.getElementById(`chat-modal-${itemId}`)) {
+        const itemName = "cercar nom de l'item"
+        showNotification(`Nou missatge de ${message.sender.alias} a l'ítem ${itemName}`, 'info');
+      }
+  }
+}
+
+
+/**
+ * Maneja la notificación de un nuevo mensaje recibido por WebSocket
+ * @param {Object} data - Datos del mensaje
+ */
+export function handleNewMessageList(data, isList = true) {
+
+  const { itemId, listId, message } = data;
   
   // Incrementar contador si no es nuestro propio mensaje
   const currentUser = JSON.parse(localStorage.getItem('user'));
   if (currentUser && message.sender.id !== currentUser.id) {
-    if (isList){
-      const currentCount = unreadMessageCountsList[itemId] || 0;
-      unreadMessageCountsList[itemId] = currentCount + 1;
+      const currentCount = unreadMessageCountsList[listId] || 0;
+      unreadMessageCountsList[listId] = currentCount + 1;
       
       // Notificar cambio en el contador
-      notifyUnreadCountChange(itemId, unreadMessageCountsList[itemId], isList);
+      notifyUnreadCountChange(listId, unreadMessageCountsList[listId], isList);
 
       // Mostrar notificación si no estamos viendo el chat
-      if (!document.getElementById(`chat-modal-list-${itemId}`)) {
-        showNotification(`Nou missatge de ${message.sender.alias} a la llista`, 'info');
+      if (!document.getElementById(`chat-modal-list-${listId}`)) {
+        const listName = "cercar nom de la llista"
+        showNotification(`Nou missatge de ${message.sender.alias} a la llista ${listName}`, 'info');
       }
-    } else {
-      const currentCount = unreadMessageCountsList[itemId] || 0;
-      unreadMessageCountsList[itemId] = currentCount + 1;
-      
-      // Notificar cambio en el contador
-      notifyUnreadCountChange(itemId, unreadMessageCountsList[itemId], isList);
-
-      // Mostrar notificación si no estamos viendo el chat
-      if (!document.getElementById(`chat-modal-${itemId}`)) {
-        showNotification(`Nou missatge de ${message.sender.alias} a l'ítem`, 'info');
-      }
-    }
-
   }
 }
+
 
 /**
  * Maneja la notificación de mensajes leídos por WebSocket
  * @param {Object} data - Datos de la notificación
  */
 export function handleMessagesRead(data, isList = false) {
+
   // Esta función se usaría para actualizar los indicadores de "leído" en un chat abierto
   // Actualmente solo registramos el evento
-  console.log('Mensajes marcados como leídos:', data);
+// itemId: null
+// listId: "1"
+// userId: 2
+  
+  isList = data.itemId === null ? false : true
+  
+  let currentUser = JSON.parse(localStorage.getItem('user'));
+  if(currentUser && data.userId === currentUser.id) {
+      if(isList){
+        if (unreadMessageCountsList[data.listId]) {
+          unreadMessageCountsList[data.listId] = 0;
+          notifyUnreadCountChange(data.listId, 0, isList);
+        }
+      } else {
+        if (unreadMessageCounts[data.itemId]) {
+          unreadMessageCounts[data.itemId] = 0;
+          notifyUnreadCountChange(data.itemId, 0, isList);
+        }
+      }
+    }
+
+
 }
 
 /**
@@ -169,7 +221,9 @@ export function subscribeToUnreadCount(itemId, callback, isList = false) {
   if (isList) {
     messageCallbacksList[itemId] = callback;
     // Notificar inmediatamente con el valor actual
+    
     count = unreadMessageCountsList[itemId] || 0;
+    
   } else {
     messageCallbacks[itemId] = callback;
     // Notificar inmediatamente con el valor actual
@@ -214,6 +268,7 @@ export async function deleteMessageIndividual(messageId, isList = false) {
   try {
     !isList ? await makeApiRequest(`/api/messages/${messageId}`, 'DELETE') 
             : await makeApiRequest(`/api/messages/list/${messageId}`, 'DELETE')
+    
     // Eliminar el ítem del array local
     // this.items = this.items.filter(item => item.id !== parseInt(itemId));
     

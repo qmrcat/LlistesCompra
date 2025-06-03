@@ -16,6 +16,8 @@ const voteRoutes = require('./routes/voteRoutes');
 
 console.clear();
 
+console.log("PID del procés:", process.pid);
+
 // Inicializar la aplicación Express
 const app = express();
 const server = http.createServer(app);
