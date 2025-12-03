@@ -5,3 +5,4 @@ doc
 *.sqlite
 *copy*.*
 copies
+package-lock.json
